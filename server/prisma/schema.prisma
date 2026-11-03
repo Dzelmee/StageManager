@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Band {
+  id         Int         @id @default(autoincrement())
+  name       String
+  genre      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  shows      Show[]
+  songs      Song[]
+  members    BandMember[]
+  equipment  Equipment[]
+  setlists   Setlist[]
+}
+
+model Show {
+  id          Int       @id @default(autoincrement())
+  name        String
+  venue       String
+  city        String?
+  date        DateTime
+  showTime    String?
+  loadIn      String?
+  soundcheck  String?
+  duration    Int?
+  status      String    @default("Planejado")
+  notes       String?
+
+  bandId      Int
+  band        Band      @relation(fields: [bandId], references: [id])
+
+  setlists    Setlist[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Song {
+  id         Int       @id @default(autoincrement())
+  title      String
+  artist     String?
+  bpm        Int?
+  key        String?
+  tuning     String?
+  duration   Int?
+  status     String    @default("Pronta")
+
+  bandId     Int
+  band       Band      @relation(fields: [bandId], references: [id])
+
+  setlistSongs SetlistSong[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Setlist {
+  id         Int       @id @default(autoincrement())
+  name       String
+
+  bandId     Int
+  band       Band      @relation(fields: [bandId], references: [id])
+
+  showId     Int?
+  show       Show?     @relation(fields: [showId], references: [id])
+
+  songs      SetlistSong[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model SetlistSong {
+  id         Int      @id @default(autoincrement())
+  position   Int
+
+  setlistId  Int
+  setlist    Setlist  @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+
+  songId     Int
+  song       Song     @relation(fields: [songId], references: [id])
+
+  @@unique([setlistId, position])
+}
+
+model BandMember {
+  id         Int      @id @default(autoincrement())
+  name       String
+  role       String
+  email      String?
+  phone      String?
+
+  bandId     Int
+  band       Band     @relation(fields: [bandId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Equipment {
+  id         Int      @id @default(autoincrement())
+  name       String
+  category   String?
+  quantity   Int      @default(1)
+  notes      String?
+
+  bandId     Int
+  band       Band     @relation(fields: [bandId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

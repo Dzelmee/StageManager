@@ -7,6 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
     "postinstall": "prisma skills sync || exit 0"
   },
   "keywords": [],
@@ -28,5 +31,10 @@
     "prisma": "^7.1.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "prisma@7.1.0": true,
+    "@prisma/engines@7.1.0": true
   }
 }

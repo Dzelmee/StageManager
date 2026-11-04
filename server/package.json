@@ -7,9 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:migrate": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
-    "db:studio": "prisma studio",
+    "test": "tsx --test src/app.test.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "keywords": [],

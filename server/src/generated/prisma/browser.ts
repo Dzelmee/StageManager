@@ -52,3 +52,28 @@ export type BandMember = Prisma.BandMemberModel
  * 
  */
 export type Equipment = Prisma.EquipmentModel
+/**
+ * Model User
+ * 
+ */
+export type User = Prisma.UserModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel
+/**
+ * Model OAuthAccount
+ * 
+ */
+export type OAuthAccount = Prisma.OAuthAccountModel
+/**
+ * Model AccountToken
+ * 
+ */
+export type AccountToken = Prisma.AccountTokenModel
+/**
+ * Model AuthEvent
+ * 
+ */
+export type AuthEvent = Prisma.AuthEventModel

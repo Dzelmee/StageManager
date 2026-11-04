@@ -1,125 +1,154 @@
 # StageManager
 
-Workspace para gestão de banda: repertório, setlists, shows, integrantes, equipamentos, arquivos técnicos, modo palco e checklist.
-
-O projeto é dividido em duas partes:
-
-- **`/` (raiz):** SPA em React + TypeScript + Vite.
-- **`/server`:** API REST em Express + Prisma + PostgreSQL.
-
-## Funcionalidades
-
-| Módulo | Persistência | Situação |
-| --- | --- | --- |
-| Repertório (músicas) | PostgreSQL | CRUD completo |
-| Shows | PostgreSQL | Criar, listar e editar (sem excluir) |
-| Setlists | PostgreSQL | Listar, adicionar/remover/reordenar músicas |
-| Dashboard | API (health) | Status do servidor; demais números são fixos |
-| Integrantes | localStorage | CRUD local no navegador |
-| Equipamentos | localStorage | CRUD local no navegador |
-| Arquivos técnicos | localStorage | Cadastro local (sem upload real) |
-| Checklist do show | localStorage | Implementado, ainda não acessível pelo menu |
-| Modo palco | localStorage | Navegação da setlist no palco |
+Workspace para bandas organizarem repertório, setlists, shows, equipamentos e
+arquivos técnicos. O acesso é por conta própria: cada cadastro cria um workspace
+isolado e todas as rotas de dados usam a banda vinculada à sessão.
 
 ## Stack
 
-- React 19, TypeScript, Vite 8, `lucide-react`
-- Express 5, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL
-- Sem roteador: a navegação é feita por estado em `src/App.tsx`
+- **Web:** React 19 + TypeScript + Vite
+- **API:** Node.js + Express 5 + Prisma 7
+- **Banco:** PostgreSQL
+- **Autenticação:** sessão opaca em cookie `HttpOnly`, senha com `scrypt`,
+  OAuth 2.0 (Google e Apple) opcional
 
-## Estrutura
+## Requisitos
 
-```
-src/
-  App.tsx              troca de páginas
-  components/Sidebar   menu lateral
-  pages/               Dashboard, Repertoire, Shows, Setlists,
-                       Members, Equipment, TechnicalFiles,
-                       StageMode, ShowChecklist
-  services/api.ts      cliente HTTP (health)
-  services/storage.ts  camada de localStorage
-server/
-  src/index.ts         rotas da API
-  src/lib/prisma.ts    cliente Prisma
-  prisma/schema.prisma modelos
-  prisma/seed.ts       banda 1 + setlist geral
-```
+- Node.js 20 ou superior
+- PostgreSQL 15 ou superior
 
-## Pré-requisitos
+## Como rodar
 
-- Node.js 22 ou superior
-- PostgreSQL 17 (local ou via Docker)
-- Git
-
-## Setup
+### 1. Backend
 
 ```bash
-# 1. dependências
+cd server
 npm install
-npm install --prefix server
-
-# 2. banco de dados
-#    crie o banco `stagemanager` no PostgreSQL e configure a conexão:
-cp server/.env.example server/.env
-
-# 3. migrations e dados iniciais
-npm run db:migrate
-npm run db:seed
+cp .env.example .env
 ```
 
-O seed é idempotente e cria:
-
-- a banda `#1` (usada pelo frontend em todas as chamadas);
-- a setlist geral (`showId = null`) usada pelo repertório do dia a dia.
-
-## Rodando
-
-Em dois terminais:
+Edite `server/.env` com a string de conexão do seu PostgreSQL. Depois aplique as
+migrações e suba a API:
 
 ```bash
-# API em http://localhost:3333
-npm run dev:server
-
-# SPA em http://localhost:5173
+npx prisma migrate deploy
 npm run dev
 ```
 
-## API
+A API responde em `http://localhost:3333`. O health check fica em
+`GET /api/health`.
 
-Base: `http://localhost:3333`
+> O cliente do Prisma é gerado em `server/src/generated/prisma`. Se você mudar o
+> schema, rode `npx prisma generate` antes de compilar.
 
-| Método | Rota | Descrição |
-| --- | --- | --- |
-| GET | `/api/health` | status do servidor |
-| GET/POST | `/api/bands` | listar/criar banda |
-| GET/POST | `/api/songs` | listar (`?bandId=1`) / criar música |
-| PUT/DELETE | `/api/songs/:id` | editar/excluir música |
-| GET/POST | `/api/setlists` | listar (`?bandId=1`) / criar setlist |
-| POST | `/api/setlists/:id/songs` | adicionar música |
-| DELETE | `/api/setlists/:id/songs/:itemId` | remover música |
-| PUT | `/api/setlists/:id/reorder` | reordenar |
-| GET | `/api/setlists/:id/duration` | duração total |
-| GET/POST | `/api/shows` | listar (`?bandId=1`) / criar show |
-| PUT | `/api/shows/:id` | editar show |
+### 2. Frontend
+
+Na raiz do projeto:
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+O SPA abre em `http://localhost:5173` e conversa com a API definida em
+`VITE_API_URL`.
+
+## Variáveis de ambiente
+
+### Frontend (`.env`)
+
+| Variável       | Padrão                  | Descrição                          |
+| -------------- | ----------------------- | ---------------------------------- |
+| `VITE_API_URL` | `http://localhost:3333` | URL base da API, sem barra no final |
+
+### Backend (`server/.env`)
+
+| Variável            | Obrigatória | Descrição                                                       |
+| ------------------- | ----------- | --------------------------------------------------------------- |
+| `DATABASE_URL`      | sim         | Conexão PostgreSQL usada pelo Prisma                            |
+| `FRONTEND_URL`      | não         | Origem do SPA; usada em redirecionamentos de OAuth e e-mails    |
+| `API_PUBLIC_URL`    | não         | URL pública da API; usada nos links de verificação de e-mail    |
+| `SESSION_SECRET`    | em produção | Segredo para assinar/derivar tokens. Use 32+ bytes aleatórios   |
+| `COOKIE_SECURE`     | não         | `true` força cookie `Secure`; padrão é `true` em produção       |
+| `GOOGLE_CLIENT_ID`  | não         | Habilita o botão de login com Google                            |
+| `GOOGLE_CLIENT_SECRET` | não      | Segredo do cliente Google                                       |
+| `APPLE_CLIENT_ID`   | não         | Service ID da Apple                                             |
+| `APPLE_TEAM_ID`     | não         | Team ID da Apple Developer                                      |
+| `APPLE_KEY_ID`      | não         | Key ID da chave `.p8`                                           |
+| `APPLE_PRIVATE_KEY` | não         | Conteúdo da chave `.p8` (com `\n` escapados)                    |
+
+Gere o segredo de sessão com:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Sem SMTP configurado, os links de confirmação de e-mail e redefinição de senha
+são impressos no console da API em ambiente de desenvolvimento.
+
+## Autenticação e segurança
+
+- Cadastro exige aceite dos Termos de Uso e da Política de Privacidade
+  (versão `2026-11-04`), registrado na conta com data e versão.
+- A senha nunca é armazenada: usamos `scrypt` com salt individual e comparação
+  em tempo constante.
+- A sessão é um token opaco enviado em cookie `HttpOnly` + `SameSite=Lax`
+  (`sm_session`), válido por 30 dias. No banco fica apenas o hash SHA-256.
+- Trocar ou redefinir a senha encerra as outras sessões ativas.
+- Login, cadastro e recuperação de senha têm limite de tentativas por IP.
+- O IP e o navegador são gravados apenas como hash nos eventos de auditoria.
+- Nenhum token de sessão é guardado no `localStorage`.
+
+### Login social
+
+Os botões de Google e Apple só aparecem quando o provedor correspondente está
+configurado. O fluxo usa Authorization Code com validação do `id_token` via
+`jose`. Para a Apple, o client secret é assinado em tempo de execução com a
+chave `.p8`.
+
+## LGPD
+
+A página **Perfil** concentra os controles de privacidade:
+
+- exportação dos dados da conta e do workspace em JSON;
+- alteração de senha e encerramento de sessões;
+- revogação do consentimento de marketing;
+- exclusão definitiva da conta.
+
+Ao excluir a conta, o workspace é apagado se você for o único integrante; caso
+contrário, apenas o seu vínculo é removido. Os documentos legais ficam em
+`public/termos.html` e `public/privacidade.html`.
 
 ## Scripts
 
-| Comando | O que faz |
-| --- | --- |
-| `npm run dev` | SPA em modo desenvolvimento |
-| `npm run dev:server` | API em modo desenvolvimento |
-| `npm run build` | build de produção do SPA |
-| `npm run lint` | ESLint |
-| `npm run db:migrate` | aplica migrations pendentes |
-| `npm run db:seed` | popula o banco (idempotente) |
+### Raiz
 
-No `server`, também há `npm run db:studio` para abrir o Prisma Studio.
+```bash
+npm run dev      # SPA em modo desenvolvimento
+npm run build    # type-check + build de produção
+npm run preview  # serve o build
+npm run lint     # ESLint
+```
 
-## Limitações conhecidas
+### `server/`
 
-- `bandId` está fixo em `1` no frontend; não há seleção/criação de banda na interface.
-- Integrantes, equipamentos, arquivos e checklist ainda usam `localStorage`.
-- Excluir show remove apenas da tela: não existe `DELETE /api/shows/:id`.
-- A tela de checklist (`ShowChecklist`) ainda não está ligada ao `App.tsx`.
-- "Upload" de arquivo técnico salva somente o nome do arquivo.
-- Várias páginas repetem a URL `http://localhost:3333` e a lógica de `fetch`.
+```bash
+npm run dev    # API com reload automático
+npm run build  # compila TypeScript para dist/
+npm start      # executa o build (via Node + Prisma/ESM)
+npm test       # testes de integração (usa stagemanager_test)
+```
+
+## Testes
+
+Os testes de integração criam e migram automaticamente o banco
+`stagemanager_test`, criam contas reais via `/api/auth/register` e reaproveitam o
+cookie de sessão. Eles limpam os dados ao final.
+
+```bash
+cd server
+npm test
+```
+
+Defina `TEST_DATABASE_URL` se quiser usar outro banco de teste.

@@ -7,8 +7,6 @@ import {
   saveShowSetlist,
 } from "../services/storage";
 
-import { BAND_ID } from "../config";
-
 import {
   setlistsApi,
   showsApi,
@@ -241,7 +239,7 @@ function Setlists({
 
     async function loadSongsFromApi() {
       try {
-        const data = await songsApi.list(BAND_ID);
+        const data = await songsApi.list();
 
         if (active) {
           setRepertoire(data.map(convertSong));
@@ -281,8 +279,8 @@ function Setlists({
 
         try {
           const [lists, showsData] = await Promise.all([
-            setlistsApi.list(BAND_ID),
-            showsApi.list(BAND_ID),
+            setlistsApi.list(),
+            showsApi.list(),
           ]);
 
           const selectedSetlist = findSetlistForShow(
@@ -466,7 +464,6 @@ function Setlists({
           name: selectedShow
             ? `Setlist — ${selectedShow.name}`
             : "Setlist geral",
-          bandId: BAND_ID,
           showId,
         });
 
@@ -553,8 +550,7 @@ function Setlists({
       if (setlistId !== null) {
         await setlistsApi.reorder(
           setlistId,
-          updated.map((entry) => entry.itemId),
-          BAND_ID
+          updated.map((entry) => entry.itemId)
         );
       }
 

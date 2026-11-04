@@ -12,7 +12,7 @@ export class ApiError extends Error {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   signal?: AbortSignal;
 };
@@ -29,6 +29,9 @@ async function request<T>(
       ? { "Content-Type": "application/json" }
       : undefined,
     body: hasBody ? JSON.stringify(options.body) : undefined,
+    // A sessão vive em cookie HttpOnly: o navegador só o envia
+    // quando pedimos credenciais explicitamente.
+    credentials: "include",
     signal: options.signal,
   });
 
@@ -36,6 +39,12 @@ async function request<T>(
     const payload = (await response
       .json()
       .catch(() => null)) as { error?: string } | null;
+
+    // Sessão expirada em qualquer chamada: a aplicação volta
+    // para a tela de login.
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("sm:unauthorized"));
+    }
 
     throw new ApiError(
       response.status,
@@ -59,12 +68,14 @@ export const http = {
   get: <T>(path: string, signal?: AbortSignal) =>
     request<T>(path, { signal }),
 
-  post: <T>(path: string, body: unknown) =>
+  post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "POST", body }),
 
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: "PUT", body }),
 
-  delete: (path: string) =>
-    request<void>(path, { method: "DELETE" }),
+  delete: <T = void>(path: string, body?: unknown) =>
+    request<T>(path, { method: "DELETE", body }),
 };
+
+export { API_URL };

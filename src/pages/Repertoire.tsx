@@ -6,8 +6,6 @@ import {
 
 } from "../services/storage";
 
-import { BAND_ID } from "../config";
-
 import { songsApi } from "../services/api";
 
 import type {
@@ -154,7 +152,6 @@ async function saveSongToApi(
     tuning: form.tuning,
     duration: durationToSeconds(form.duration),
     status: form.status,
-    bandId: BAND_ID,
   };
 
   return editingId !== null
@@ -165,13 +162,13 @@ async function saveSongToApi(
 
 
 async function deleteSongFromApi(id: number): Promise<void> {
-  await songsApi.remove(id, BAND_ID);
+  await songsApi.remove(id);
 }
 
 
 
 async function fetchSongsFromApi(): Promise<Song[]> {
-  const data = await songsApi.list(BAND_ID);
+  const data = await songsApi.list();
 
   return data.map(convertApiSong);
 }

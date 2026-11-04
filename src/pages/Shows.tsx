@@ -16,8 +16,6 @@ import {
   X,
 } from "lucide-react";
 
-import { BAND_ID } from "../config";
-
 import { showsApi } from "../services/api";
 
 import type {
@@ -115,7 +113,7 @@ function Shows({
         setShowsLoading(true);
         setShowsError("");
   
-        const data = await showsApi.list(BAND_ID, controller.signal);
+        const data = await showsApi.list(controller.signal);
 
         if (!Array.isArray(data)) {
           throw new Error("Resposta inválida da API.");
@@ -217,7 +215,6 @@ function Shows({
           duration,
           status: form.status,
           notes: form.notes.trim(),
-          bandId: BAND_ID,
         });
 
         setShows((currentShows) =>
@@ -254,7 +251,6 @@ function Shows({
         duration,
         status: form.status,
         notes: form.notes.trim(),
-        bandId: BAND_ID,
       });
 
       setShows((currentShows) => [

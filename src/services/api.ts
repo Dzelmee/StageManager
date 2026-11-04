@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { API_URL, http } from "./http";
 
 export type ApiHealth = {
   status: string;
@@ -9,6 +9,145 @@ export type ApiHealth = {
 export async function getApiHealth(): Promise<ApiHealth> {
   return http.get<ApiHealth>("/api/health");
 }
+
+/* =====================================
+   CONTA E AUTENTICAÇÃO
+   ===================================== */
+
+export type PublicUser = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  avatarUrl: string | null;
+  instrument: string | null;
+  consentVersion: string | null;
+  consentedAt: string | null;
+  marketingOptIn: boolean;
+  createdAt: string;
+  bandId: number;
+};
+
+export type AuthProviders = {
+  password: boolean;
+  google: boolean;
+  apple: boolean;
+  consentVersion: string;
+  termsVersion: string;
+};
+
+export type LoginInput = {
+  email: string;
+  password: string;
+};
+
+export type RegisterInput = LoginInput & {
+  name: string;
+  acceptedTerms: boolean;
+  acceptedPrivacy: boolean;
+  marketingOptIn?: boolean;
+};
+
+export type ProfileInput = {
+  name?: string;
+  instrument?: string | null;
+  avatarUrl?: string | null;
+  marketingOptIn?: boolean;
+};
+
+export type ApiSession = {
+  id: string;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  current: boolean;
+};
+
+export type DeleteAccountInput = {
+  confirmation: string;
+  email: string;
+  password: string;
+};
+
+export const authApi = {
+  providers: () => http.get<AuthProviders>("/api/auth/providers"),
+
+  me: () => http.get<{ user: PublicUser }>("/api/auth/me"),
+
+  login: (input: LoginInput) =>
+    http.post<{ user: PublicUser }>("/api/auth/login", input),
+
+  register: (input: RegisterInput) =>
+    http.post<{ user: PublicUser; verificationToken?: string }>(
+      "/api/auth/register",
+      input
+    ),
+
+  logout: () => http.post<void>("/api/auth/logout"),
+
+  updateProfile: (input: ProfileInput) =>
+    http.put<{ user: PublicUser }>("/api/auth/me", input),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    http.post<void>("/api/auth/me/password", {
+      currentPassword,
+      newPassword,
+    }),
+
+  sessions: () =>
+    http.get<{ sessions: ApiSession[] }>("/api/auth/me/sessions"),
+
+  revokeSession: (id: string) =>
+    http.delete(`/api/auth/me/sessions/${id}`),
+
+  logoutAll: () => http.post<void>("/api/auth/logout-all"),
+
+  forgotPassword: (email: string) =>
+    http.post<{ message: string }>("/api/auth/forgot-password", {
+      email,
+    }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    http.post<void>("/api/auth/reset-password", {
+      token,
+      newPassword,
+    }),
+
+  deleteAccount: (input: DeleteAccountInput) =>
+    http.delete<void>("/api/auth/me", input),
+
+  /**
+   * Baixa o arquivo JSON de portabilidade (LGPD).
+   * Usa `fetch` direto porque o conteúdo é um download, não JSON
+   * de resposta para a interface.
+   */
+  async exportData(): Promise<void> {
+    const response = await fetch(`${API_URL}/api/auth/me/export`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Não foi possível gerar o arquivo dos seus dados."
+      );
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "stagemanager-meus-dados.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+};
+
+/* =====================================
+   DADOS DO WORKSPACE
+   ===================================== */
 
 export type SongStatus = "Pronta" | "Ensaiando" | "Nova" | "Pausada";
 
@@ -34,7 +173,6 @@ export type SongInput = {
   tuning?: string | null;
   duration?: number | null;
   status?: SongStatus;
-  bandId: number;
 };
 
 export type ShowStatus =
@@ -72,7 +210,6 @@ export type ShowInput = {
   duration?: number | null;
   status?: ShowStatus;
   notes?: string | null;
-  bandId: number;
 };
 
 export type ApiSetlistItem = {
@@ -96,7 +233,6 @@ export type ApiSetlist = {
 
 export type SetlistInput = {
   name: string;
-  bandId: number;
   showId?: number | null;
 };
 
@@ -109,8 +245,8 @@ export type SetlistDuration = {
 };
 
 export const songsApi = {
-  list: (bandId: number) =>
-    http.get<ApiSong[]>(`/api/songs?bandId=${bandId}`),
+  list: (signal?: AbortSignal) =>
+    http.get<ApiSong[]>("/api/songs", signal),
 
   create: (input: SongInput) =>
     http.post<ApiSong>("/api/songs", input),
@@ -118,13 +254,12 @@ export const songsApi = {
   update: (id: number, input: Partial<SongInput>) =>
     http.put<ApiSong>(`/api/songs/${id}`, input),
 
-  remove: (id: number, bandId: number) =>
-    http.delete(`/api/songs/${id}?bandId=${bandId}`),
+  remove: (id: number) => http.delete(`/api/songs/${id}`),
 };
 
 export const showsApi = {
-  list: (bandId: number, signal?: AbortSignal) =>
-    http.get<ApiShow[]>(`/api/shows?bandId=${bandId}`, signal),
+  list: (signal?: AbortSignal) =>
+    http.get<ApiShow[]>("/api/shows", signal),
 
   create: (input: ShowInput) =>
     http.post<ApiShow>("/api/shows", input),
@@ -134,8 +269,8 @@ export const showsApi = {
 };
 
 export const setlistsApi = {
-  list: (bandId: number, signal?: AbortSignal) =>
-    http.get<ApiSetlist[]>(`/api/setlists?bandId=${bandId}`, signal),
+  list: (signal?: AbortSignal) =>
+    http.get<ApiSetlist[]>("/api/setlists", signal),
 
   create: (input: SetlistInput) =>
     http.post<ApiSetlist>("/api/setlists", input),
@@ -148,10 +283,9 @@ export const setlistsApi = {
   removeSong: (setlistId: number, itemId: number) =>
     http.delete(`/api/setlists/${setlistId}/songs/${itemId}`),
 
-  reorder: (setlistId: number, itemIds: number[], bandId?: number) =>
+  reorder: (setlistId: number, itemIds: number[]) =>
     http.put<ApiSetlistItem[]>(`/api/setlists/${setlistId}/reorder`, {
       itemIds,
-      ...(bandId ? { bandId } : {}),
     }),
 
   duration: (setlistId: number) =>

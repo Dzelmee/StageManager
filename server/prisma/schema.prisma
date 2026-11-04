@@ -101,8 +101,13 @@ model BandMember {
   bandId     Int
   band       Band     @relation(fields: [bandId], references: [id])
 
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Equipment {
@@ -117,4 +122,95 @@ model Equipment {
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+/*
+  ========================================
+  CONTA E AUTENTICAÇÃO
+  ========================================
+
+  Dados pessoais ficam isolados nestas tabelas. Senhas são hash scrypt
+  (nunca reversível) e tokens de sessão são armazenados apenas como hash.
+*/
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  passwordHash   String?
+  emailVerified  Boolean   @default(false)
+  avatarUrl      String?
+  instrument     String?
+
+  // Consentimento LGPD versionado.
+  consentVersion String?
+  consentedAt    DateTime?
+  marketingOptIn Boolean   @default(false)
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  memberships    BandMember[]
+  sessions       Session[]
+  oauthAccounts  OAuthAccount[]
+  accountTokens  AccountToken[]
+  authEvents     AuthEvent[]
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  tokenHash     String   @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  lastUsedAt    DateTime @default(now())
+
+  // Guardamos apenas hashes, nunca IP/user-agent em texto puro.
+  ipHash        String?
+  userAgentHash String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  provider          String
+  providerAccountId String
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model AccountToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  type      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+}
+
+model AuthEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  type      String
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }

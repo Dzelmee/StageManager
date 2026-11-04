@@ -34,6 +34,8 @@ server/node_modules/
 !.env.*.example
 server/.env
 server/.env.*
+!server/.env.example
+!server/.env.*.example
 
 # Compilações
 dist/

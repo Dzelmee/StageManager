@@ -16,11 +16,14 @@ import {
   X,
 } from "lucide-react";
 
-type ShowStatus =
-  | "Confirmado"
-  | "Pendente"
-  | "Realizado"
-  | "Cancelado";
+import { BAND_ID } from "../config";
+
+import { showsApi } from "../services/api";
+
+import type {
+  ApiShow,
+  ShowStatus,
+} from "../services/api";
 
 type Show = {
   id: number;
@@ -65,6 +68,22 @@ function formatDate(
   return `${day}/${month}/${year}`;
 }
 
+function convertApiShow(show: ApiShow): Show {
+  return {
+    id: show.id,
+    name: show.name,
+    venue: show.venue,
+    city: show.city ?? "",
+    date: show.date.slice(0, 10),
+    showTime: show.showTime ?? "",
+    loadIn: show.loadIn ?? "",
+    soundcheck: show.soundcheck ?? "",
+    duration: show.duration ?? 60,
+    status: show.status,
+    notes: show.notes ?? "",
+  };
+}
+
 type ShowsProps = {
   onOpenSetlist: (showId: number) => void;
   onOpenChecklist: (showId: number) => void;
@@ -96,38 +115,13 @@ function Shows({
         setShowsLoading(true);
         setShowsError("");
   
-        const response = await fetch(
-          "http://localhost:3333/api/shows?bandId=1",
-          { signal: controller.signal }
-        );
-  
-        if (!response.ok) {
-          throw new Error(
-            `Erro ao carregar shows. HTTP ${response.status}`
-          );
-        }
-  
-        const data = await response.json();
-  
+        const data = await showsApi.list(BAND_ID, controller.signal);
+
         if (!Array.isArray(data)) {
           throw new Error("Resposta inválida da API.");
         }
-  
-        const convertedShows: Show[] = data.map((show) => ({
-          id: show.id,
-          name: show.name,
-          venue: show.venue,
-          city: show.city ?? "",
-          date: show.date.slice(0, 10),
-          showTime: show.showTime ?? "",
-          loadIn: "",
-          soundcheck: "",
-          duration: show.duration ?? 60,
-          status: show.status,
-          notes: show.notes ?? "",
-        }));
-  
-        setShows(convertedShows);
+
+        setShows(data.map(convertApiShow));
       } catch (error) {
         if (controller.signal.aborted) return;
   
@@ -212,129 +206,68 @@ function Shows({
   
     if (editingId !== null) {
       try {
-        const response = await fetch(
-          `http://localhost:3333/api/shows/${editingId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: form.name.trim(),
-              venue: form.venue.trim(),
-              city: form.city.trim(),
-              date: `${form.date}T12:00:00.000Z`,
-              showTime: form.showTime,
-              duration,
-              status: form.status,
-              notes: form.notes.trim(),
-            }),
-          }
-        );
-    
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-    
-          throw new Error(
-            errorData?.error ??
-              `Erro ao editar show. HTTP ${response.status}`
-          );
-        }
-    
-        const savedShow = await response.json();
-    
+        const savedShow = await showsApi.update(editingId, {
+          name: form.name.trim(),
+          venue: form.venue.trim(),
+          city: form.city.trim(),
+          date: `${form.date}T12:00:00.000Z`,
+          showTime: form.showTime,
+          loadIn: form.loadIn,
+          soundcheck: form.soundcheck,
+          duration,
+          status: form.status,
+          notes: form.notes.trim(),
+          bandId: BAND_ID,
+        });
+
         setShows((currentShows) =>
           currentShows.map((show) =>
-            show.id === editingId
-              ? {
-                  ...show,
-                  name: savedShow.name,
-                  venue: savedShow.venue,
-                  city: savedShow.city ?? "",
-                  date: savedShow.date.slice(0, 10),
-                  showTime: savedShow.showTime ?? "",
-                  duration: savedShow.duration ?? 60,
-                  status: savedShow.status as ShowStatus,
-                  notes: savedShow.notes ?? "",
-                }
-              : show
+            show.id === editingId ? convertApiShow(savedShow) : show
           )
         );
-    
+
         closeModal();
-    
+
         console.log("Show atualizado no PostgreSQL:", savedShow);
       } catch (error) {
         console.error("Erro ao editar show:", error);
-    
+
         alert(
           error instanceof Error
             ? error.message
             : "Não foi possível atualizar o show."
         );
       }
-    
+
       return;
     }
-  
+
     try {
-      const response = await fetch(
-        "http://localhost:3333/api/shows",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            venue: form.venue.trim(),
-            city: form.city.trim(),
-            date: `${form.date}T12:00:00.000Z`,
-            showTime: form.showTime,
-            duration,
-            status: form.status,
-            notes: form.notes.trim(),
-            bandId: 1,
-          }),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-  
-        throw new Error(
-          errorData?.error ??
-            `Erro ao criar show. HTTP ${response.status}`
-        );
-      }
-  
-      const savedShow = await response.json();
-  
-      const newShow: Show = {
-        id: savedShow.id,
-        name: savedShow.name,
-        venue: savedShow.venue,
-        city: savedShow.city ?? "",
-        date: savedShow.date.slice(0, 10),
-        showTime: savedShow.showTime ?? "",
-        loadIn: "",
-        soundcheck: "",
-        duration: savedShow.duration ?? 60,
-        status: savedShow.status as ShowStatus,
-        notes: savedShow.notes ?? "",
-      };
-  
+      const savedShow = await showsApi.create({
+        name: form.name.trim(),
+        venue: form.venue.trim(),
+        city: form.city.trim(),
+        date: `${form.date}T12:00:00.000Z`,
+        showTime: form.showTime,
+        loadIn: form.loadIn,
+        soundcheck: form.soundcheck,
+        duration,
+        status: form.status,
+        notes: form.notes.trim(),
+        bandId: BAND_ID,
+      });
+
       setShows((currentShows) => [
         ...currentShows,
-        newShow,
+        convertApiShow(savedShow),
       ]);
-  
+
       closeModal();
-  
+
       console.log("Show salvo no PostgreSQL:", savedShow);
     } catch (error) {
       console.error("Erro ao criar show:", error);
-  
+
       alert(
         error instanceof Error
           ? error.message

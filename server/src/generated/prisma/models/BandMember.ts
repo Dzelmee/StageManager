@@ -43,6 +43,7 @@ export type BandMemberMinAggregateOutputType = {
   email: string | null
   phone: string | null
   bandId: number | null
+  userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -54,6 +55,7 @@ export type BandMemberMaxAggregateOutputType = {
   email: string | null
   phone: string | null
   bandId: number | null
+  userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -65,6 +67,7 @@ export type BandMemberCountAggregateOutputType = {
   email: number
   phone: number
   bandId: number
+  userId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -88,6 +91,7 @@ export type BandMemberMinAggregateInputType = {
   email?: true
   phone?: true
   bandId?: true
+  userId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -99,6 +103,7 @@ export type BandMemberMaxAggregateInputType = {
   email?: true
   phone?: true
   bandId?: true
+  userId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -110,6 +115,7 @@ export type BandMemberCountAggregateInputType = {
   email?: true
   phone?: true
   bandId?: true
+  userId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -208,6 +214,7 @@ export type BandMemberGroupByOutputType = {
   email: string | null
   phone: string | null
   bandId: number
+  userId: string | null
   createdAt: Date
   updatedAt: Date
   _count: BandMemberCountAggregateOutputType | null
@@ -242,9 +249,11 @@ export type BandMemberWhereInput = {
   email?: Prisma.StringNullableFilter<"BandMember"> | string | null
   phone?: Prisma.StringNullableFilter<"BandMember"> | string | null
   bandId?: Prisma.IntFilter<"BandMember"> | number
+  userId?: Prisma.StringNullableFilter<"BandMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
   band?: Prisma.XOR<Prisma.BandScalarRelationFilter, Prisma.BandWhereInput>
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type BandMemberOrderByWithRelationInput = {
@@ -254,9 +263,11 @@ export type BandMemberOrderByWithRelationInput = {
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   bandId?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   band?: Prisma.BandOrderByWithRelationInput
+  user?: Prisma.UserOrderByWithRelationInput
 }
 
 export type BandMemberWhereUniqueInput = Prisma.AtLeast<{
@@ -269,9 +280,11 @@ export type BandMemberWhereUniqueInput = Prisma.AtLeast<{
   email?: Prisma.StringNullableFilter<"BandMember"> | string | null
   phone?: Prisma.StringNullableFilter<"BandMember"> | string | null
   bandId?: Prisma.IntFilter<"BandMember"> | number
+  userId?: Prisma.StringNullableFilter<"BandMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
   band?: Prisma.XOR<Prisma.BandScalarRelationFilter, Prisma.BandWhereInput>
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id">
 
 export type BandMemberOrderByWithAggregationInput = {
@@ -281,6 +294,7 @@ export type BandMemberOrderByWithAggregationInput = {
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   bandId?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BandMemberCountOrderByAggregateInput
@@ -300,6 +314,7 @@ export type BandMemberScalarWhereWithAggregatesInput = {
   email?: Prisma.StringNullableWithAggregatesFilter<"BandMember"> | string | null
   phone?: Prisma.StringNullableWithAggregatesFilter<"BandMember"> | string | null
   bandId?: Prisma.IntWithAggregatesFilter<"BandMember"> | number
+  userId?: Prisma.StringNullableWithAggregatesFilter<"BandMember"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BandMember"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BandMember"> | Date | string
 }
@@ -312,6 +327,7 @@ export type BandMemberCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   band: Prisma.BandCreateNestedOneWithoutMembersInput
+  user?: Prisma.UserCreateNestedOneWithoutMembershipsInput
 }
 
 export type BandMemberUncheckedCreateInput = {
@@ -321,6 +337,7 @@ export type BandMemberUncheckedCreateInput = {
   email?: string | null
   phone?: string | null
   bandId: number
+  userId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -333,6 +350,7 @@ export type BandMemberUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   band?: Prisma.BandUpdateOneRequiredWithoutMembersNestedInput
+  user?: Prisma.UserUpdateOneWithoutMembershipsNestedInput
 }
 
 export type BandMemberUncheckedUpdateInput = {
@@ -342,6 +360,7 @@ export type BandMemberUncheckedUpdateInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandId?: Prisma.IntFieldUpdateOperationsInput | number
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -353,6 +372,7 @@ export type BandMemberCreateManyInput = {
   email?: string | null
   phone?: string | null
   bandId: number
+  userId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -373,6 +393,7 @@ export type BandMemberUncheckedUpdateManyInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandId?: Prisma.IntFieldUpdateOperationsInput | number
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -394,6 +415,7 @@ export type BandMemberCountOrderByAggregateInput = {
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   bandId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -410,6 +432,7 @@ export type BandMemberMaxOrderByAggregateInput = {
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   bandId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -421,6 +444,7 @@ export type BandMemberMinOrderByAggregateInput = {
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   bandId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -472,6 +496,48 @@ export type BandMemberUncheckedUpdateManyWithoutBandNestedInput = {
   deleteMany?: Prisma.BandMemberScalarWhereInput | Prisma.BandMemberScalarWhereInput[]
 }
 
+export type BandMemberCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput> | Prisma.BandMemberCreateWithoutUserInput[] | Prisma.BandMemberUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.BandMemberCreateOrConnectWithoutUserInput | Prisma.BandMemberCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.BandMemberCreateManyUserInputEnvelope
+  connect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+}
+
+export type BandMemberUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput> | Prisma.BandMemberCreateWithoutUserInput[] | Prisma.BandMemberUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.BandMemberCreateOrConnectWithoutUserInput | Prisma.BandMemberCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.BandMemberCreateManyUserInputEnvelope
+  connect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+}
+
+export type BandMemberUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput> | Prisma.BandMemberCreateWithoutUserInput[] | Prisma.BandMemberUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.BandMemberCreateOrConnectWithoutUserInput | Prisma.BandMemberCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.BandMemberUpsertWithWhereUniqueWithoutUserInput | Prisma.BandMemberUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.BandMemberCreateManyUserInputEnvelope
+  set?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  disconnect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  delete?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  connect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  update?: Prisma.BandMemberUpdateWithWhereUniqueWithoutUserInput | Prisma.BandMemberUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.BandMemberUpdateManyWithWhereWithoutUserInput | Prisma.BandMemberUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.BandMemberScalarWhereInput | Prisma.BandMemberScalarWhereInput[]
+}
+
+export type BandMemberUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput> | Prisma.BandMemberCreateWithoutUserInput[] | Prisma.BandMemberUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.BandMemberCreateOrConnectWithoutUserInput | Prisma.BandMemberCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.BandMemberUpsertWithWhereUniqueWithoutUserInput | Prisma.BandMemberUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.BandMemberCreateManyUserInputEnvelope
+  set?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  disconnect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  delete?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  connect?: Prisma.BandMemberWhereUniqueInput | Prisma.BandMemberWhereUniqueInput[]
+  update?: Prisma.BandMemberUpdateWithWhereUniqueWithoutUserInput | Prisma.BandMemberUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.BandMemberUpdateManyWithWhereWithoutUserInput | Prisma.BandMemberUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.BandMemberScalarWhereInput | Prisma.BandMemberScalarWhereInput[]
+}
+
 export type BandMemberCreateWithoutBandInput = {
   name: string
   role: string
@@ -479,6 +545,7 @@ export type BandMemberCreateWithoutBandInput = {
   phone?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutMembershipsInput
 }
 
 export type BandMemberUncheckedCreateWithoutBandInput = {
@@ -487,6 +554,7 @@ export type BandMemberUncheckedCreateWithoutBandInput = {
   role: string
   email?: string | null
   phone?: string | null
+  userId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -527,8 +595,56 @@ export type BandMemberScalarWhereInput = {
   email?: Prisma.StringNullableFilter<"BandMember"> | string | null
   phone?: Prisma.StringNullableFilter<"BandMember"> | string | null
   bandId?: Prisma.IntFilter<"BandMember"> | number
+  userId?: Prisma.StringNullableFilter<"BandMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BandMember"> | Date | string
+}
+
+export type BandMemberCreateWithoutUserInput = {
+  name: string
+  role: string
+  email?: string | null
+  phone?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  band: Prisma.BandCreateNestedOneWithoutMembersInput
+}
+
+export type BandMemberUncheckedCreateWithoutUserInput = {
+  id?: number
+  name: string
+  role: string
+  email?: string | null
+  phone?: string | null
+  bandId: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type BandMemberCreateOrConnectWithoutUserInput = {
+  where: Prisma.BandMemberWhereUniqueInput
+  create: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput>
+}
+
+export type BandMemberCreateManyUserInputEnvelope = {
+  data: Prisma.BandMemberCreateManyUserInput | Prisma.BandMemberCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type BandMemberUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.BandMemberWhereUniqueInput
+  update: Prisma.XOR<Prisma.BandMemberUpdateWithoutUserInput, Prisma.BandMemberUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.BandMemberCreateWithoutUserInput, Prisma.BandMemberUncheckedCreateWithoutUserInput>
+}
+
+export type BandMemberUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.BandMemberWhereUniqueInput
+  data: Prisma.XOR<Prisma.BandMemberUpdateWithoutUserInput, Prisma.BandMemberUncheckedUpdateWithoutUserInput>
+}
+
+export type BandMemberUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.BandMemberScalarWhereInput
+  data: Prisma.XOR<Prisma.BandMemberUpdateManyMutationInput, Prisma.BandMemberUncheckedUpdateManyWithoutUserInput>
 }
 
 export type BandMemberCreateManyBandInput = {
@@ -537,6 +653,7 @@ export type BandMemberCreateManyBandInput = {
   role: string
   email?: string | null
   phone?: string | null
+  userId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -548,6 +665,7 @@ export type BandMemberUpdateWithoutBandInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutMembershipsNestedInput
 }
 
 export type BandMemberUncheckedUpdateWithoutBandInput = {
@@ -556,6 +674,7 @@ export type BandMemberUncheckedUpdateWithoutBandInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -566,6 +685,50 @@ export type BandMemberUncheckedUpdateManyWithoutBandInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type BandMemberCreateManyUserInput = {
+  id?: number
+  name: string
+  role: string
+  email?: string | null
+  phone?: string | null
+  bandId: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type BandMemberUpdateWithoutUserInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  band?: Prisma.BandUpdateOneRequiredWithoutMembersNestedInput
+}
+
+export type BandMemberUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bandId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type BandMemberUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bandId?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -579,9 +742,11 @@ export type BandMemberSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   email?: boolean
   phone?: boolean
   bandId?: boolean
+  userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }, ExtArgs["result"]["bandMember"]>
 
 export type BandMemberSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -591,9 +756,11 @@ export type BandMemberSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   email?: boolean
   phone?: boolean
   bandId?: boolean
+  userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }, ExtArgs["result"]["bandMember"]>
 
 export type BandMemberSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -603,9 +770,11 @@ export type BandMemberSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   email?: boolean
   phone?: boolean
   bandId?: boolean
+  userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }, ExtArgs["result"]["bandMember"]>
 
 export type BandMemberSelectScalar = {
@@ -615,25 +784,30 @@ export type BandMemberSelectScalar = {
   email?: boolean
   phone?: boolean
   bandId?: boolean
+  userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BandMemberOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "role" | "email" | "phone" | "bandId" | "createdAt" | "updatedAt", ExtArgs["result"]["bandMember"]>
+export type BandMemberOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "role" | "email" | "phone" | "bandId" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["bandMember"]>
 export type BandMemberInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }
 export type BandMemberIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }
 export type BandMemberIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   band?: boolean | Prisma.BandDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.BandMember$userArgs<ExtArgs>
 }
 
 export type $BandMemberPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "BandMember"
   objects: {
     band: Prisma.$BandPayload<ExtArgs>
+    user: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -642,6 +816,7 @@ export type $BandMemberPayload<ExtArgs extends runtime.Types.Extensions.Internal
     email: string | null
     phone: string | null
     bandId: number
+    userId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["bandMember"]>
@@ -1039,6 +1214,7 @@ readonly fields: BandMemberFieldRefs;
 export interface Prisma__BandMemberClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   band<T extends Prisma.BandDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BandDefaultArgs<ExtArgs>>): Prisma.Prisma__BandClient<runtime.Types.Result.GetResult<Prisma.$BandPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.BandMember$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BandMember$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1074,6 +1250,7 @@ export interface BandMemberFieldRefs {
   readonly email: Prisma.FieldRef<"BandMember", 'String'>
   readonly phone: Prisma.FieldRef<"BandMember", 'String'>
   readonly bandId: Prisma.FieldRef<"BandMember", 'Int'>
+  readonly userId: Prisma.FieldRef<"BandMember", 'String'>
   readonly createdAt: Prisma.FieldRef<"BandMember", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BandMember", 'DateTime'>
 }
@@ -1469,6 +1646,25 @@ export type BandMemberDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many BandMembers to delete.
    */
   limit?: number
+}
+
+/**
+ * BandMember.user
+ */
+export type BandMember$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

@@ -1,11 +1,57 @@
 import express from "express";
 import cors from "cors";
+
 import { prisma } from "./lib/prisma";
+import { ALLOWED_ORIGINS, IS_PRODUCTION } from "./auth/config";
+import { requireAuth } from "./auth/middleware";
+import authRouter from "./routes/auth";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Atrás do proxy/túnel (Cloudflare, Render, etc.) o IP real vem em
+// X-Forwarded-For. `1` confia apenas no primeiro proxy.
+app.set("trust proxy", 1);
+
+app.disable("x-powered-by");
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Requisições sem Origin (curl, apps nativos) e origens
+      // explicitamente permitidas podem passar.
+      if (!origin || ALLOWED_ORIGINS.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
+    credentials: true,
+  })
+);
+
+app.use((_request, response, next) => {
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("X-Frame-Options", "DENY");
+  response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+
+  if (IS_PRODUCTION) {
+    response.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    );
+  }
+
+  next();
+});
+
+app.use(express.json({ limit: "256kb" }));
+// A Apple responde com `form_post` no callback de login.
+app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 
 app.get("/", (_request, response) => {
   response.json({
@@ -22,9 +68,21 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
-app.get("/api/bands", async (_request, response) => {
+// Login, cadastro, perfil, LGPD e OAuth. Fica antes do guarda de
+// sessão porque precisa ser acessível sem autenticação.
+app.use("/api/auth", authRouter);
+
+// A partir daqui, todo /api exige sessão válida.
+app.use("/api", requireAuth);
+
+app.get("/api/bands", async (request, response) => {
   try {
-    const bands = await prisma.band.findMany();
+    const bands = await prisma.band.findMany({
+      where: {
+        members: { some: { userId: request.auth!.user.id } },
+      },
+      orderBy: { id: "asc" },
+    });
 
     response.json(bands);
   } catch (error) {
@@ -36,73 +94,15 @@ app.get("/api/bands", async (_request, response) => {
   }
 });
 
-app.post("/api/bands", async (request, response) => {
-  try {
-    const { name, genre } = request.body ?? {};
-
-    if (typeof name !== "string" || !name.trim()) {
-      response.status(400).json({
-        error: "O nome da banda é obrigatório.",
-      });
-      return;
-    }
-
-    if (
-      genre !== undefined &&
-      genre !== null &&
-      typeof genre !== "string"
-    ) {
-      response.status(400).json({
-        error: "O gênero musical deve ser um texto.",
-      });
-      return;
-    }
-
-    const band = await prisma.band.create({
-      data: {
-        name: name.trim(),
-        genre: typeof genre === "string"
-          ? genre.trim() || null
-          : null,
-      },
-    });
-
-    response.status(201).json(band);
-  } catch (error) {
-    console.error("Erro ao cadastrar banda:", error);
-
-    response.status(500).json({
-      error: "Erro ao cadastrar banda.",
-    });
-  }
-});
-
 app.post("/api/songs", async (request, response) => {
   try {
-    const { title, artist, bpm, key, tuning, duration, bandId } =
+    const bandId = request.auth!.bandId;
+    const { title, artist, bpm, key, tuning, duration } =
       request.body ?? {};
 
     if (typeof title !== "string" || !title.trim()) {
       response.status(400).json({
         error: "O título da música é obrigatório.",
-      });
-      return;
-    }
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "O ID da banda deve ser um número inteiro positivo.",
-      });
-      return;
-    }
-
-    const band = await prisma.band.findUnique({
-      where: { id: bandId },
-    });
-
-    if (!band) {
-      response.status(404).json({
-        error: "Banda não encontrada.",
       });
       return;
     }
@@ -131,17 +131,8 @@ app.post("/api/songs", async (request, response) => {
 
 app.get("/api/songs", async (request, response) => {
   try {
-    const bandId = Number(request.query.bandId);
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "Informe um bandId válido.",
-      });
-      return;
-    }
-
     const songs = await prisma.song.findMany({
-      where: { bandId },
+      where: { bandId: request.auth!.bandId },
       orderBy: { title: "asc" },
     });
 
@@ -158,6 +149,7 @@ app.get("/api/songs", async (request, response) => {
 app.put("/api/songs/:id", async (request, response) => {
   try {
     const id = Number(request.params.id);
+    const bandId = request.auth!.bandId;
 
     if (!Number.isInteger(id) || id <= 0) {
       response.status(400).json({ error: "ID inválido." });
@@ -166,10 +158,6 @@ app.put("/api/songs/:id", async (request, response) => {
 
     const { title, artist, bpm, key, tuning, duration, status } =
       request.body ?? {};
-
-    const bandId = Number(
-      request.body?.bandId ?? request.query.bandId
-    );
 
     const data: {
       title?: string;
@@ -235,12 +223,7 @@ app.put("/api/songs/:id", async (request, response) => {
     }
 
     const existing = await prisma.song.findFirst({
-      where: {
-        id,
-        ...(Number.isInteger(bandId) && bandId > 0
-          ? { bandId }
-          : {}),
-      },
+      where: { id, bandId },
     });
 
     if (!existing) {
@@ -263,23 +246,15 @@ app.put("/api/songs/:id", async (request, response) => {
 app.delete("/api/songs/:id", async (request, response) => {
   try {
     const id = Number(request.params.id);
+    const bandId = request.auth!.bandId;
 
     if (!Number.isInteger(id) || id <= 0) {
       response.status(400).json({ error: "ID inválido." });
       return;
     }
 
-    const bandId = Number(
-      request.body?.bandId ?? request.query.bandId
-    );
-
     const existing = await prisma.song.findFirst({
-      where: {
-        id,
-        ...(Number.isInteger(bandId) && bandId > 0
-          ? { bandId }
-          : {}),
-      },
+      where: { id, bandId },
     });
 
     if (!existing) {
@@ -311,20 +286,11 @@ app.delete("/api/songs/:id", async (request, response) => {
 // STAGEMANAGER - API DE SETLISTS
 // =====================================
 
-// Listar setlists de uma banda
+// Listar setlists da banda da sessão
 app.get("/api/setlists", async (request, response) => {
   try {
-    const bandId = Number(request.query.bandId);
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "Informe um bandId válido.",
-      });
-      return;
-    }
-
     const setlists = await prisma.setlist.findMany({
-      where: { bandId },
+      where: { bandId: request.auth!.bandId },
       include: {
         songs: {
           orderBy: { position: "asc" },
@@ -352,18 +318,12 @@ app.get("/api/setlists", async (request, response) => {
 // Criar uma nova setlist
 app.post("/api/setlists", async (request, response) => {
   try {
-    const { name, bandId, showId } = request.body ?? {};
+    const bandId = request.auth!.bandId;
+    const { name, showId } = request.body ?? {};
 
     if (typeof name !== "string" || !name.trim()) {
       response.status(400).json({
         error: "O nome da setlist é obrigatório.",
-      });
-      return;
-    }
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "bandId inválido.",
       });
       return;
     }
@@ -375,17 +335,6 @@ app.post("/api/setlists", async (request, response) => {
     ) {
       response.status(400).json({
         error: "showId inválido.",
-      });
-      return;
-    }
-
-    const band = await prisma.band.findUnique({
-      where: { id: bandId },
-    });
-
-    if (!band) {
-      response.status(404).json({
-        error: "Banda não encontrada.",
       });
       return;
     }
@@ -435,19 +384,24 @@ app.post("/api/setlists", async (request, response) => {
 
 app.post("/api/setlists/:id/songs", async (request, response) => {
   try {
+    const bandId = request.auth!.bandId;
     const setlistId = Number(request.params.id);
     const songId = request.body?.songId;
 
-    if (!Number.isInteger(setlistId) || setlistId <= 0 ||
-        !Number.isInteger(songId) || songId <= 0) {
+    if (
+      !Number.isInteger(setlistId) ||
+      setlistId <= 0 ||
+      !Number.isInteger(songId) ||
+      songId <= 0
+    ) {
       response.status(400).json({
         error: "IDs inválidos.",
       });
       return;
     }
 
-    const setlist = await prisma.setlist.findUnique({
-      where: { id: setlistId },
+    const setlist = await prisma.setlist.findFirst({
+      where: { id: setlistId, bandId },
     });
 
     if (!setlist) {
@@ -460,7 +414,7 @@ app.post("/api/setlists/:id/songs", async (request, response) => {
     const song = await prisma.song.findFirst({
       where: {
         id: songId,
-        bandId: setlist.bandId,
+        bandId,
       },
     });
 
@@ -524,8 +478,8 @@ app.get("/api/setlists/:id/duration", async (request, response) => {
       return;
     }
 
-    const setlist = await prisma.setlist.findUnique({
-      where: { id },
+    const setlist = await prisma.setlist.findFirst({
+      where: { id, bandId: request.auth!.bandId },
       include: {
         songs: {
           include: {
@@ -551,11 +505,7 @@ app.get("/api/setlists/:id/duration", async (request, response) => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    const formattedDuration = [
-      hours,
-      minutes,
-      seconds,
-    ]
+    const formattedDuration = [hours, minutes, seconds]
       .map((value) => String(value).padStart(2, "0"))
       .join(":");
 
@@ -583,6 +533,7 @@ app.delete(
   "/api/setlists/:id/songs/:itemId",
   async (request, response) => {
     try {
+      const bandId = request.auth!.bandId;
       const setlistId = Number(request.params.id);
       const itemId = Number(request.params.itemId);
 
@@ -594,6 +545,18 @@ app.delete(
       ) {
         response.status(400).json({
           error: "IDs inválidos.",
+        });
+        return;
+      }
+
+      const setlist = await prisma.setlist.findFirst({
+        where: { id: setlistId, bandId },
+        select: { id: true },
+      });
+
+      if (!setlist) {
+        response.status(404).json({
+          error: "Setlist não encontrada.",
         });
         return;
       }
@@ -665,9 +628,7 @@ app.delete(
 app.put("/api/setlists/:id/reorder", async (request, response) => {
   try {
     const setlistId = Number(request.params.id);
-    const bandId = Number(
-      request.body?.bandId ?? request.query.bandId
-    );
+    const bandId = request.auth!.bandId;
 
     // `songIds` é o contrato legado. O correto é `itemIds`,
     // porque os valores são IDs de SetlistSong, não de Song.
@@ -691,12 +652,7 @@ app.put("/api/setlists/:id/reorder", async (request, response) => {
     }
 
     const setlist = await prisma.setlist.findFirst({
-      where: {
-        id: setlistId,
-        ...(Number.isInteger(bandId) && bandId > 0
-          ? { bandId }
-          : {}),
-      },
+      where: { id: setlistId, bandId },
     });
 
     if (!setlist) {
@@ -772,18 +728,9 @@ app.put("/api/setlists/:id/reorder", async (request, response) => {
 
 app.get("/api/shows", async (request, response) => {
   try {
-    const bandId = Number(request.query.bandId);
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "Informe um bandId válido.",
-      });
-      return;
-    }
-
     const shows = await prisma.show.findMany({
       where: {
-        bandId,
+        bandId: request.auth!.bandId,
       },
       orderBy: {
         date: "asc",
@@ -820,6 +767,7 @@ app.get("/api/shows", async (request, response) => {
 
 app.post("/api/shows", async (request, response) => {
   try {
+    const bandId = request.auth!.bandId;
     const {
       name,
       venue,
@@ -831,7 +779,6 @@ app.post("/api/shows", async (request, response) => {
       duration,
       status,
       notes,
-      bandId,
     } = request.body ?? {};
 
     if (
@@ -842,13 +789,6 @@ app.post("/api/shows", async (request, response) => {
     ) {
       response.status(400).json({
         error: "Nome e local do show são obrigatórios.",
-      });
-      return;
-    }
-
-    if (!Number.isInteger(bandId) || bandId <= 0) {
-      response.status(400).json({
-        error: "ID da banda inválido.",
       });
       return;
     }
@@ -897,17 +837,6 @@ app.post("/api/shows", async (request, response) => {
       }
     }
 
-    const band = await prisma.band.findUnique({
-      where: { id: bandId },
-    });
-
-    if (!band) {
-      response.status(404).json({
-        error: "Banda não encontrada.",
-      });
-      return;
-    }
-
     const show = await prisma.show.create({
       data: {
         name: name.trim(),
@@ -936,6 +865,7 @@ app.post("/api/shows", async (request, response) => {
 
 app.put("/api/shows/:id", async (request, response) => {
   try {
+    const bandId = request.auth!.bandId;
     const showId = Number(request.params.id);
 
     if (!Number.isInteger(showId) || showId <= 0) {
@@ -959,8 +889,6 @@ app.put("/api/shows/:id", async (request, response) => {
       status,
       notes,
     } = body;
-
-    const bandId = Number(body.bandId ?? request.query.bandId);
 
     if (
       name !== undefined &&
@@ -1022,12 +950,7 @@ app.put("/api/shows/:id", async (request, response) => {
     }
 
     const existingShow = await prisma.show.findFirst({
-      where: {
-        id: showId,
-        ...(Number.isInteger(bandId) && bandId > 0
-          ? { bandId }
-          : {}),
-      },
+      where: { id: showId, bandId },
     });
 
     if (!existingShow) {

@@ -7,6 +7,21 @@ import {
   saveShowSetlist,
 } from "../services/storage";
 
+import { BAND_ID } from "../config";
+
+import {
+  setlistsApi,
+  showsApi,
+  songsApi,
+} from "../services/api";
+
+import type {
+  ApiSetlist,
+  ApiSetlistItem,
+  ApiShow,
+  ApiSong,
+} from "../services/api";
+
 import {
   ArrowDown,
   ArrowUp,
@@ -29,6 +44,10 @@ type Song = {
   status: string;
 };
 
+type SetlistEntry = Song & {
+  itemId: number;
+};
+
 type Show = {
   id: number;
   name: string;
@@ -47,26 +66,68 @@ type SetlistsProps = {
   showId: number | null;
 };
 
-function loadShows(): Show[] {
-  try {
-    const saved =
-      localStorage.getItem(
-        "stagemanager-shows"
-      );
+function convertSong(song: ApiSong): Song {
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.artist ?? "",
+    bpm: song.bpm ?? 0,
+    key: song.key ?? "",
+    tuning: song.tuning ?? "",
+    duration:
+      song.duration == null
+        ? "0:00"
+        : `${Math.floor(song.duration / 60)}:${String(
+            song.duration % 60
+          ).padStart(2, "0")}`,
+    status: song.status,
+  };
+}
 
-    if (!saved) {
-      return [];
-    }
+function convertSetlistEntry(
+  item: ApiSetlistItem
+): SetlistEntry {
+  return {
+    ...convertSong(item.song),
+    itemId: item.id,
+  };
+}
 
-    const parsed =
-      JSON.parse(saved);
+function convertShow(show: ApiShow): Show {
+  return {
+    id: show.id,
+    name: show.name,
+    venue: show.venue,
+    city: show.city ?? "",
+    date: show.date.slice(0, 10),
+    showTime: show.showTime ?? "",
+    loadIn: show.loadIn ?? "",
+    soundcheck: show.soundcheck ?? "",
+    duration: show.duration ?? 60,
+    status: show.status,
+    notes: show.notes ?? "",
+  };
+}
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-  } catch {
-    return [];
-  }
+/**
+ * Regra única para localizar a setlist de um show.
+ * `showId === null` significa a setlist geral da banda.
+ * Havendo mais de uma, escolhe a de menor ID (a mais antiga).
+ */
+function findSetlistForShow(
+  setlists: ApiSetlist[],
+  showId: number | null
+): ApiSetlist | null {
+  const candidates = setlists.filter((item) =>
+    showId === null
+      ? item.showId === null
+      : item.showId === showId
+  );
+
+  return (
+    candidates.sort((a, b) => a.id - b.id)[0] ??
+    null
+  );
 }
 
 function getStorageKey(
@@ -174,48 +235,21 @@ function Setlists({
 }: SetlistsProps) {
   const [repertoire, setRepertoire] = useState<Song[]>([]);
   const [repertoireError, setRepertoireError] = useState("");
-  
+
   useEffect(() => {
     let active = true;
-  
+
     async function loadSongsFromApi() {
       try {
-        const response = await fetch(
-          "http://localhost:3333/api/songs?bandId=1"
-        );
-  
-        if (!response.ok) {
-          throw new Error(`Erro HTTP ${response.status}`);
-        }
-  
-        const data = await response.json();
-  
-        if (!Array.isArray(data)) {
-          throw new Error("Resposta inválida da API.");
-        }
-  
+        const data = await songsApi.list(BAND_ID);
+
         if (active) {
-          setRepertoire(
-            data.map((song) => ({
-              ...song,
-              artist: song.artist ?? "",
-              bpm: song.bpm ?? 0,
-              key: song.key ?? "",
-              tuning: song.tuning ?? "",
-              duration:
-                song.duration == null
-                  ? "0:00"
-                  : `${Math.floor(song.duration / 60)}:${String(
-                      song.duration % 60
-                    ).padStart(2, "0")}`,
-            }))
-          );
-  
+          setRepertoire(data.map(convertSong));
           setRepertoireError("");
         }
       } catch (error) {
         console.error("Erro ao carregar repertório:", error);
-  
+
         if (active) {
           setRepertoireError(
             "Não foi possível carregar as músicas do servidor."
@@ -223,89 +257,53 @@ function Setlists({
         }
       }
     }
-  
+
     void loadSongsFromApi();
-  
+
     return () => {
       active = false;
     };
   }, []);
 
-  const [shows] =
-    useState<Show[]>(
-      loadShows
-    );
+  const [shows, setShows] = useState<Show[]>([]);
 
-    const [setlist, setSetlist] = useState<Song[]>([]);
-    const [setlistLoading, setSetlistLoading] = useState(true);
-    const [setlistError, setSetlistError] = useState("");
+  const [setlist, setSetlist] = useState<SetlistEntry[]>([]);
+  const [setlistId, setSetlistId] = useState<number | null>(null);
+  const [setlistLoading, setSetlistLoading] = useState(true);
+  const [setlistError, setSetlistError] = useState("");
     
     useEffect(() => {
       let active = true;
-    
+
       async function loadSetlistFromApi() {
         setSetlistLoading(true);
         setSetlistError("");
-    
+
         try {
-          const response = await fetch(
-            "http://localhost:3333/api/setlists?bandId=1"
-          );
-    
-          if (!response.ok) {
-            throw new Error(`Erro HTTP ${response.status}`);
-          }
-    
-          const data = await response.json();
-    
-          if (!Array.isArray(data)) {
-            throw new Error("Resposta inválida da API.");
-          }
-    
-          const selectedSetlist = data.find(
-            (item) =>
-              showId === null
-                ? item.showId === null
-                : item.showId === showId
+          const [lists, showsData] = await Promise.all([
+            setlistsApi.list(BAND_ID),
+            showsApi.list(BAND_ID),
+          ]);
+
+          const selectedSetlist = findSetlistForShow(
+            lists,
+            showId
           );
 
-          
-    
-          const songs: Song[] = selectedSetlist
-            ? selectedSetlist.songs.map(
-                (item: {
-                  song: {
-                    id: number;
-                    title: string;
-                    artist: string | null;
-                    bpm: number | null;
-                    key: string | null;
-                    tuning: string | null;
-                    duration: number | null;
-                    status: string;
-                  };
-                }) => ({
-                  ...item.song,
-                  artist: item.song.artist ?? "",
-                  bpm: item.song.bpm ?? 0,
-                  key: item.song.key ?? "",
-                  tuning: item.song.tuning ?? "",
-                  duration:
-                    item.song.duration == null
-                      ? "0:00"
-                      : `${Math.floor(item.song.duration / 60)}:${String(
-                          item.song.duration % 60
-                        ).padStart(2, "0")}`,
-                })
-              )
-            : [];
-    
           if (active) {
-            setSetlist(songs);
+            setShows(showsData.map(convertShow));
+            setSetlistId(selectedSetlist?.id ?? null);
+            setSetlist(
+              selectedSetlist
+                ? selectedSetlist.songs.map(
+                    convertSetlistEntry
+                  )
+                : []
+            );
           }
         } catch (error) {
           console.error("Erro ao carregar setlist:", error);
-    
+
           if (active) {
             setSetlistError(
               "Não foi possível carregar a setlist do servidor."
@@ -317,9 +315,9 @@ function Setlists({
           }
         }
       }
-    
+
       void loadSetlistFromApi();
-    
+
       return () => {
         active = false;
       };
@@ -452,345 +450,163 @@ function Setlists({
   const isOverLimit =
     difference < 0;
 
-      async function addSong(song: Song) {
-        try {
-          // Consulta as setlists cadastradas no PostgreSQL.
-          const listResponse = await fetch(
-            "http://localhost:3333/api/setlists?bandId=1"
-          );
-      
-          if (!listResponse.ok) {
-            throw new Error("Não foi possível consultar as setlists.");
-          }
-      
-          const lists = await listResponse.json();
-      
-          if (!Array.isArray(lists)) {
-            throw new Error("Resposta inválida da API.");
-          }
-      
-          // Identifica a setlist correspondente ao show.
-          const selectedList = lists.find(
-            (item: { id: number; showId: number | null }) =>
-              showId === null
-                ? item.id === 1
-                : item.showId === showId
-          );
-      
-          if (!selectedList) {
-            throw new Error(
-              "Nenhuma setlist encontrada para este show."
-            );
-          }
-      
-          // Evita adicionar a mesma música duas vezes.
-          const alreadyAdded = selectedList.songs?.some(
-            (item: { songId: number }) => item.songId === song.id
-          );
-      
-          if (alreadyAdded) {
-            alert("Esta música já está na setlist.");
-            return;
-          }
-      
-          // Adiciona à setlist correta.
-          const response = await fetch(
-            `http://localhost:3333/api/setlists/${selectedList.id}/songs`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                songId: song.id,
-              }),
-            }
-          );
-      
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-      
-            throw new Error(
-              errorData?.error ??
-                `Erro ao adicionar música. HTTP ${response.status}`
-            );
-          }
-      
-          // Confirma o salvamento no PostgreSQL.
-          const savedItem = await response.json();
-      
-          setSetlist((current) => [...current, song]);
-      
-          console.log("Música adicionada:", savedItem);
-          console.log("Setlist utilizada:", selectedList.id);
-        } catch (error) {
-          console.error("Erro ao adicionar música:", error);
-      
-          alert(
-            error instanceof Error
-              ? error.message
-              : "Não foi possível adicionar a música."
-          );
-        }
-      }
-
-
-    async function removeSong(songId: number) {
-    
-      const confirmed = window.confirm(
-        "Deseja remover esta música da setlist? Ela continuará no Repertório."
-      );
-    
-      if (!confirmed) return;
-    
-      try {
-        // Busca a setlist atual para encontrar o ID
-        // do vínculo entre música e setlist.
-        const listResponse = await fetch(
-          "http://localhost:3333/api/setlists?bandId=1"
-        );
-    
-        if (!listResponse.ok) {
-          throw new Error("Não foi possível consultar a setlist.");
-        }
-    
-        const lists = await listResponse.json();
-    
-        const selectedList = lists.find(
-          (item: { id: number; showId: number | null }) =>
-            showId === null
-              ? item.id === 1
-              : item.showId === showId
-        );
-    
-        if (!selectedList) {
-          throw new Error("Setlist não encontrada.");
-        }
-    
-        const linkedSong = selectedList.songs.find(
-          (item: { id: number; songId: number }) =>
-            item.songId === songId
-        );
-    
-        if (!linkedSong) {
-          throw new Error("Música não encontrada na setlist.");
-        }
-    
-        const response = await fetch(
-          `http://localhost:3333/api/setlists/${selectedList.id}/songs/${linkedSong.id}`,
-          {
-            method: "DELETE",
-          }
-        );
-    
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-    
-          throw new Error(
-            errorData?.error ??
-              `Erro ao remover música. HTTP ${response.status}`
-          );
-        }
-    
-        // Atualiza a interface somente após confirmar
-        // que a música foi removida do banco.
-        setSetlist((current) =>
-          current.filter((song) => song.id !== songId)
-        );
-      } catch (error) {
-        console.error("Erro ao remover música:", error);
-    
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Não foi possível remover a música."
-        );
-      }
+  async function addSong(song: Song) {
+    // O backend também recusa duplicata (409), mas evitamos a viagem.
+    if (setlist.some((item) => item.id === song.id)) {
+      alert("Esta música já está na setlist.");
+      return;
     }
 
-    async function moveSong(
-      index: number,
-      direction: "up" | "down"
-    ) {
-      const newIndex =
-        direction === "up" ? index - 1 : index + 1;
-    
-      if (newIndex < 0 || newIndex >= setlist.length) {
-        return;
-      }
-    
-      const updated = [...setlist];
-    
-      [updated[index], updated[newIndex]] = [
-        updated[newIndex],
-        updated[index],
-      ];
-    
-      try {
-        // Consulta os IDs reais dos itens da setlist.
-        const listResponse = await fetch(
-          "http://localhost:3333/api/setlists?bandId=1"
-        );
-    
-        if (!listResponse.ok) {
-          throw new Error("Não foi possível consultar a setlist.");
-        }
-    
-        const lists = await listResponse.json();
-    
-        const selectedList = lists.find(
-          (item: { id: number; showId: number | null }) =>
-            showId === null
-              ? item.id === 1
-              : item.showId === showId
-        );
-    
-        if (!selectedList) {
-          throw new Error("Setlist não encontrada.");
-        }
-    
-        // Relaciona os itens do banco às músicas da interface.
-        const usedItemIds = new Set<number>();
-    
-        const itemIds = updated.map((song) => {
-          const linkedItem = selectedList.songs.find(
-            (item: { id: number; songId: number }) =>
-              item.songId === song.id &&
-              !usedItemIds.has(item.id)
-          );
-    
-          if (!linkedItem) {
-            throw new Error(
-              `Não foi possível localizar "${song.title}" na setlist.`
-            );
-          }
-    
-          usedItemIds.add(linkedItem.id);
-          return linkedItem.id;
-        });
-    
-        console.log("DEBUG REORDER:", {
+    try {
+      let targetSetlistId = setlistId;
+
+      // Cria a setlist do show (ou a geral) na primeira música.
+      if (targetSetlistId === null) {
+        const created = await setlistsApi.create({
+          name: selectedShow
+            ? `Setlist — ${selectedShow.name}`
+            : "Setlist geral",
+          bandId: BAND_ID,
           showId,
-          setlistId: selectedList.id,
-          idsDoBanco: selectedList.songs.map(
-            (item: { id: number }) => item.id
-          ),
-          idsEnviados: itemIds,
         });
-        // Envia a nova ordem para o PostgreSQL.
-        const response = await fetch(
-          `http://localhost:3333/api/setlists/${selectedList.id}/reorder`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              songIds: itemIds,
-            }),
-          }
-        );
-    
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-    
-          throw new Error(
-            errorData?.error ??
-              `Erro ao reorganizar setlist. HTTP ${response.status}`
-          );
-        }
-    
-        // Atualiza a interface após o banco confirmar.
-        setSetlist(updated);
-      } catch (error) {
-        console.error("Erro ao reorganizar músicas:", error);
-    
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Não foi possível reorganizar as músicas."
-        );
+
+        targetSetlistId = created.id;
+        setSetlistId(created.id);
       }
+
+      const savedItem = await setlistsApi.addSong(
+        targetSetlistId,
+        song.id
+      );
+
+      setSetlist((current) => [
+        ...current,
+        {
+          ...song,
+          itemId: savedItem.id,
+        },
+      ]);
+    } catch (error) {
+      console.error("Erro ao adicionar música:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível adicionar a música."
+      );
+    }
+  }
+
+
+  async function removeSong(entry: SetlistEntry) {
+    if (setlistId === null) {
+      return;
     }
 
-    async function clearSetlist() {
-      if (setlist.length === 0) {
-        return;
-      }
-    
-      const confirmed = window.confirm(
-        "Deseja remover todas as músicas desta setlist? As músicas continuarão no Repertório."
+    const confirmed = window.confirm(
+      "Deseja remover esta música da setlist? Ela continuará no Repertório."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await setlistsApi.removeSong(
+        setlistId,
+        entry.itemId
       );
-    
-      if (!confirmed) {
-        return;
-      }
-    
-      try {
-        // Consulta as setlists existentes.
-        const listResponse = await fetch(
-          "http://localhost:3333/api/setlists?bandId=1"
-        );
-    
-        if (!listResponse.ok) {
-          throw new Error("Não foi possível consultar as setlists.");
-        }
-    
-        const lists = await listResponse.json();
-    
-        if (!Array.isArray(lists)) {
-          throw new Error("Resposta inválida da API.");
-        }
-    
-        // Identifica a setlist correta.
-        const selectedList = lists.find(
-          (item: { id: number; showId: number | null }) =>
-            showId === null
-              ? item.id === 1
-              : item.showId === showId
-        );
-    
-        if (!selectedList) {
-          throw new Error("Setlist não encontrada.");
-        }
-    
-        const items = selectedList.songs as Array<{
-          id: number;
-          songId: number;
-        }>;
-    
-        if (!Array.isArray(items)) {
-          throw new Error("Não foi possível consultar as músicas da setlist.");
-        }
-    
-        // Remove os vínculos, sem excluir músicas do Repertório.
-        for (const item of items) {
-          const response = await fetch(
-            `http://localhost:3333/api/setlists/${selectedList.id}/songs/${item.id}`,
-            {
-              method: "DELETE",
-            }
-          );
-    
-          if (!response.ok) {
-            throw new Error(
-              `Falha ao remover uma música. HTTP ${response.status}`
-            );
-          }
-        }
-    
-        // Atualiza a interface somente após a confirmação da API.
-        setSetlist([]);
-    
-        alert("Setlist limpa com sucesso!");
-      } catch (error) {
-        console.error("Erro ao limpar setlist:", error);
-    
-        alert(
-          "Não foi possível concluir a limpeza. Atualize a página para conferir o estado salvo no banco."
-        );
-      }
+
+      setSetlist((current) =>
+        current.filter(
+          (song) => song.itemId !== entry.itemId
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao remover música:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível remover a música."
+      );
     }
+  }
+
+  async function moveSong(
+    index: number,
+    direction: "up" | "down"
+  ) {
+    const newIndex =
+      direction === "up" ? index - 1 : index + 1;
+
+    if (newIndex < 0 || newIndex >= setlist.length) {
+      return;
+    }
+
+    const updated = [...setlist];
+
+    [updated[index], updated[newIndex]] = [
+      updated[newIndex],
+      updated[index],
+    ];
+
+    try {
+      if (setlistId !== null) {
+        await setlistsApi.reorder(
+          setlistId,
+          updated.map((entry) => entry.itemId),
+          BAND_ID
+        );
+      }
+
+      // Atualiza a interface após o banco confirmar.
+      setSetlist(updated);
+    } catch (error) {
+      console.error("Erro ao reorganizar músicas:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível reorganizar as músicas."
+      );
+    }
+  }
+
+  async function clearSetlist() {
+    if (setlist.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Deseja remover todas as músicas desta setlist? As músicas continuarão no Repertório."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      if (setlistId !== null) {
+        // Sequencial de propósito: o backend reorganiza as posições
+        // restantes a cada remoção.
+        for (const entry of setlist) {
+          await setlistsApi.removeSong(
+            setlistId,
+            entry.itemId
+          );
+        }
+      }
+
+      setSetlist([]);
+
+      alert("Setlist limpa com sucesso!");
+    } catch (error) {
+      console.error("Erro ao limpar setlist:", error);
+
+      alert(
+        "Não foi possível concluir a limpeza. Atualize a página para conferir o estado salvo no banco."
+      );
+    }
+  }
 
   return (
     <div>
@@ -1156,7 +972,7 @@ function Setlists({
 
                 <div
                   className="setlist-song"
-                  key={song.id}
+                  key={song.itemId}
                 >
 
                   <div className="setlist-position">
@@ -1237,7 +1053,7 @@ function Setlists({
                       title="Remover"
                       onClick={() =>
                         removeSong(
-                          song.id
+                          song
                         )
                       }
                     >

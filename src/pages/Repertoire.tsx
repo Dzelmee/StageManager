@@ -1,10 +1,22 @@
 import {
 
-  getSongs,
+  getSongs,
 
-  saveSongs,
+  saveSongs,
 
 } from "../services/storage";
+
+import { BAND_ID } from "../config";
+
+import { songsApi } from "../services/api";
+
+import type {
+
+  ApiSong,
+
+  SongStatus,
+
+} from "../services/api";
 
 
 
@@ -44,63 +56,23 @@ import {
 
 
 
-type SongStatus =
-
-  | "Pronta"
-
-  | "Ensaiando"
-
-  | "Nova"
-
-  | "Pausada";
-
-
-
 type Song = {
 
-  id: number;
+  id: number;
 
-  title: string;
+  title: string;
 
-  artist: string;
+  artist: string;
 
-  bpm: number;
+  bpm: number;
 
-  key: string;
+  key: string;
 
-  tuning: string;
+  tuning: string;
 
-  duration: string;
+  duration: string;
 
-  status: SongStatus;
-
-};
-
-
-
-type ApiSong = {
-
-  id: number;
-
-  title: string;
-
-  artist: string | null;
-
-  bpm: number | null;
-
-  key: string | null;
-
-  tuning: string | null;
-
-  duration: number | null;
-
-  status: SongStatus;
-
-  bandId: number;
-
-  createdAt: string;
-
-  updatedAt: string;
+  status: SongStatus;
 
 };
 
@@ -171,139 +143,37 @@ function durationToSeconds(duration: string): number {
 
 
 async function saveSongToApi(
-
-  form: typeof emptyForm,
-
-  editingId: number | null
-
+  form: typeof emptyForm,
+  editingId: number | null
 ): Promise<ApiSong> {
+  const payload = {
+    title: form.title.trim(),
+    artist: form.artist.trim(),
+    bpm: Number(form.bpm),
+    key: form.key.trim(),
+    tuning: form.tuning,
+    duration: durationToSeconds(form.duration),
+    status: form.status,
+    bandId: BAND_ID,
+  };
 
-  const payload = {
-
-    title: form.title.trim(),
-
-    artist: form.artist.trim(),
-
-    bpm: Number(form.bpm),
-
-    key: form.key.trim(),
-
-    tuning: form.tuning,
-
-    duration: durationToSeconds(form.duration),
-
-    status: form.status,
-
-    bandId: 1,
-
-  };
-
-
-
-  const url =
-
-    editingId !== null
-
-      ? `http://localhost:3333/api/songs/${editingId}`
-
-      : "http://localhost:3333/api/songs";
-
-
-
-  const response = await fetch(url, {
-
-    method: editingId !== null ? "PUT" : "POST",
-
-    headers: {
-
-      "Content-Type": "application/json",
-
-    },
-
-    body: JSON.stringify(payload),
-
-  });
-
-
-
-  if (!response.ok) {
-
-    throw new Error(
-
-      `Erro ao salvar música. HTTP ${response.status}`
-
-    );
-
-  }
-
-
-
-  return (await response.json()) as ApiSong;
-
+  return editingId !== null
+    ? songsApi.update(editingId, payload)
+    : songsApi.create(payload);
 }
 
 
 
 async function deleteSongFromApi(id: number): Promise<void> {
-
-  const response = await fetch(
-
-    `http://localhost:3333/api/songs/${id}`,
-
-    {
-
-      method: "DELETE",
-
-    }
-
-  );
-
-
-
-  if (!response.ok) {
-
-    const result = await response.json().catch(() => null);
-
-
-
-    throw new Error(
-
-      result?.error ||
-
-        `Erro ao excluir música. HTTP ${response.status}`
-
-    );
-
-  }
-
+  await songsApi.remove(id, BAND_ID);
 }
 
 
 
 async function fetchSongsFromApi(): Promise<Song[]> {
+  const data = await songsApi.list(BAND_ID);
 
-  const response = await fetch(
-
-    "http://localhost:3333/api/songs?bandId=1"
-
-  );
-
-
-
-  if (!response.ok) {
-
-    throw new Error("Erro ao carregar músicas da API.");
-
-  }
-
-
-
-  const data: ApiSong[] = await response.json();
-
-
-
-  return data.map(convertApiSong);
-
+  return data.map(convertApiSong);
 }
 
 

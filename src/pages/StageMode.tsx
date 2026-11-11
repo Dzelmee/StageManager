@@ -187,53 +187,23 @@ function StageMode() {
         selectedShowId
     ) ?? null;
 
-  /*
-    Carrega o setlist
-    quando um show é escolhido.
-  */
-
-  useEffect(() => {
-    if (
-      selectedShowId === null
-    ) {
-      setSongs([]);
-      setCurrentIndex(0);
-
-      return;
-    }
-
-    const loadedSongs =
-      loadShowSetlist(
-        selectedShowId
-      );
+  function selectShow(showId: number) {
+    const loadedSongs = loadShowSetlist(showId);
+    const savedPosition = getStagePosition(showId);
+    const parsedPosition = savedPosition ? Number(savedPosition) : 0;
+    const validPosition = Number.isInteger(parsedPosition) &&
+      parsedPosition >= 0 && parsedPosition < loadedSongs.length;
 
     setSongs(loadedSongs);
+    setCurrentIndex(validPosition ? parsedPosition : 0);
+    setSelectedShowId(showId);
+  }
 
-    const savedPosition =
-    getStagePosition(selectedShowId);
-
-    const parsedPosition =
-      savedPosition
-        ? Number(
-            savedPosition
-          )
-        : 0;
-
-    if (
-      Number.isInteger(
-        parsedPosition
-      ) &&
-      parsedPosition >= 0 &&
-      parsedPosition <
-        loadedSongs.length
-    ) {
-      setCurrentIndex(
-        parsedPosition
-      );
-    } else {
-      setCurrentIndex(0);
-    }
-  }, [selectedShowId]);
+  function backToShows() {
+    setSelectedShowId(null);
+    setSongs([]);
+    setCurrentIndex(0);
+  }
 
   /*
     Salva a posição atual.
@@ -300,13 +270,7 @@ function StageMode() {
       : 0;
 
   function next() {
-    setCurrentIndex(
-      (current) =>
-        Math.min(
-          current + 1,
-          songs.length - 1
-        )
-    );
+    setCurrentIndex((current) => Math.min(current + 1, songs.length - 1));
   }
 
   function previous() {
@@ -355,11 +319,8 @@ function StageMode() {
         return;
       }
 
-      if (
-        event.key ===
-        "ArrowRight"
-      ) {
-        next();
+      if (event.key === "ArrowRight") {
+        setCurrentIndex((current) => Math.min(current + 1, songs.length - 1));
       }
 
       if (
@@ -433,11 +394,7 @@ function StageMode() {
                 <button
                   key={show.id}
                   className="stage-show-card"
-                  onClick={() =>
-                    setSelectedShowId(
-                      show.id
-                    )
-                  }
+                  onClick={() => selectShow(show.id)}
                 >
 
                   <div className="stage-show-card-top">
@@ -563,11 +520,7 @@ function StageMode() {
 
         <button
           className="stage-back-button"
-          onClick={() =>
-            setSelectedShowId(
-              null
-            )
-          }
+          onClick={backToShows}
         >
           <ArrowLeft
             size={16}
@@ -614,11 +567,7 @@ function StageMode() {
 
         <button
           className="stage-back-button"
-          onClick={() =>
-            setSelectedShowId(
-              null
-            )
-          }
+          onClick={backToShows}
         >
           <ArrowLeft
             size={16}

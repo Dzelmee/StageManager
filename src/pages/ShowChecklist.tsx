@@ -153,7 +153,7 @@ function formatDate(date: string) {
   return `${day}/${month}/${year}`;
 }
 
-function ShowChecklist({
+function ShowChecklistContent({
   showId,
   onBack,
 }: ShowChecklistProps) {
@@ -177,12 +177,6 @@ function ShowChecklist({
     shows.find(
       (show) => show.id === showId
     ) ?? null;
-
-  useEffect(() => {
-    setChecklist(
-      loadChecklist(showId)
-    );
-  }, [showId]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -605,6 +599,10 @@ function ShowChecklist({
 
     </div>
   );
+}
+
+function ShowChecklist(props: ShowChecklistProps) {
+  return <ShowChecklistContent key={props.showId} {...props} />;
 }
 
 export default ShowChecklist;

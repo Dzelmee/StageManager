@@ -20,9 +20,9 @@ import type {
 
 import {
 
-  useEffect,
+  useEffect,
 
-  useState,
+  useState,
 
 } from "react";
 
@@ -30,7 +30,7 @@ import {
 
 import type {
 
-  FormEvent,
+  FormEvent,
 
 } from "react";
 
@@ -38,17 +38,17 @@ import type {
 
 import {
 
-  Edit3,
+  Edit3,
 
-  Music2,
+  Music2,
 
-  Plus,
+  Plus,
 
-  Search,
+  Search,
 
-  Trash2,
+  Trash2,
 
-  X,
+  X,
 
 } from "lucide-react";
 
@@ -78,35 +78,35 @@ type Song = {
 
 function convertApiSong(song: ApiSong): Song {
 
-  const seconds = song.duration ?? 0;
+  const seconds = song.duration ?? 0;
 
 
 
-  const minutes = Math.floor(seconds / 60);
+  const minutes = Math.floor(seconds / 60);
 
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = seconds % 60;
 
 
 
-  return {
+  return {
 
-    id: song.id,
+    id: song.id,
 
-    title: song.title,
+    title: song.title,
 
-    artist: song.artist ?? "",
+    artist: song.artist ?? "",
 
-    bpm: song.bpm ?? 0,
+    bpm: song.bpm ?? 0,
 
-    key: song.key ?? "",
+    key: song.key ?? "",
 
-    tuning: song.tuning ?? "Standard",
+    tuning: song.tuning ?? "Standard",
 
-    duration: `${minutes}:${String(remainingSeconds).padStart(2, "0")}`,
+    duration: `${minutes}:${String(remainingSeconds).padStart(2, "0")}`,
 
-    status: song.status,
+    status: song.status,
 
-  };
+  };
 
 }
 
@@ -114,27 +114,27 @@ function convertApiSong(song: ApiSong): Song {
 
 function durationToSeconds(duration: string): number {
 
-  const parts = duration.trim().split(":").map(Number);
+  const parts = duration.trim().split(":").map(Number);
 
 
 
-  if (
+  if (
 
-    parts.length !== 2 ||
+    parts.length !== 2 ||
 
-    parts.some((part) => !Number.isInteger(part) || part < 0) ||
+    parts.some((part) => !Number.isInteger(part) || part < 0) ||
 
-    parts[1] >= 60
+    parts[1] >= 60
 
-  ) {
+  ) {
 
-    throw new Error("Duração inválida. Use o formato minutos:segundos.");
+    throw new Error("Duração inválida. Use o formato minutos:segundos.");
 
-  }
+  }
 
 
 
-  return parts[0] * 60 + parts[1];
+  return parts[0] * 60 + parts[1];
 
 }
 
@@ -177,19 +177,19 @@ async function fetchSongsFromApi(): Promise<Song[]> {
 
 const emptyForm = {
 
-  title: "",
+  title: "",
 
-  artist: "",
+  artist: "",
 
-  bpm: "",
+  bpm: "",
 
-  key: "",
+  key: "",
 
-  tuning: "Standard",
+  tuning: "Standard",
 
-  duration: "",
+  duration: "",
 
-  status: "Nova" as SongStatus,
+  status: "Nova" as SongStatus,
 
 };
 
@@ -197,45 +197,45 @@ const emptyForm = {
 
 function Repertoire() {
 
-  const [songs, setSongs] =
+  const [songs, setSongs] =
 
-  useState<Song[]>(() =>
+  useState<Song[]>(() =>
 
-    getSongs<Song[]>()
+    getSongs<Song[]>()
 
-  );
+  );
 
-  const [search, setSearch] =
+  const [search, setSearch] =
 
-    useState("");
-
-
-
-  const [modalOpen, setModalOpen] =
-
-    useState(false);
+    useState("");
 
 
 
-  const [editingId, setEditingId] =
+  const [modalOpen, setModalOpen] =
 
-    useState<number | null>(null);
-
-
-
-  const [deleteId, setDeleteId] =
-
-    useState<number | null>(null);
+    useState(false);
 
 
 
-  const [form, setForm] =
+  const [editingId, setEditingId] =
 
-    useState(emptyForm);
+    useState<number | null>(null);
 
 
 
-    const [apiLoading, setApiLoading] = useState(true);
+  const [deleteId, setDeleteId] =
+
+    useState<number | null>(null);
+
+
+
+  const [form, setForm] =
+
+    useState(emptyForm);
+
+
+
+    const [apiLoading, setApiLoading] = useState(true);
 
 const [apiError, setApiError] = useState("");
 
@@ -243,371 +243,371 @@ const [apiError, setApiError] = useState("");
 
 useEffect(() => {
 
-  let active = true;
+  let active = true;
 
 
 
-  async function loadSongs() {
+  async function loadSongs() {
 
-    try {
+    try {
 
-      const apiSongs = await fetchSongsFromApi();
-
-
-
-      if (active) {
-
-        setSongs(apiSongs);
-
-        setApiError("");
-
-      }
-
-    } catch (error) {
-
-      console.error("Erro ao carregar repertório:", error);
+      const apiSongs = await fetchSongsFromApi();
 
 
 
-      if (active) {
+      if (active) {
 
-        setApiError("Não foi possível carregar o repertório da API.");
+        setSongs(apiSongs);
 
-      }
+        setApiError("");
 
-    } finally {
+      }
 
-      if (active) {
+    } catch (error) {
 
-        setApiLoading(false);
-
-      }
-
-    }
-
-  }
+      console.error("Erro ao carregar repertório:", error);
 
 
 
-  loadSongs();
+      if (active) {
+
+        setApiError("Não foi possível carregar o repertório da API.");
+
+      }
+
+    } finally {
+
+      if (active) {
+
+        setApiLoading(false);
+
+      }
+
+    }
+
+  }
 
 
 
-  return () => {
+  loadSongs();
 
-    active = false;
 
-  };
+
+  return () => {
+
+    active = false;
+
+  };
 
 }, []);
 
 
 
-  /*
+  /*
 
-    Toda vez que songs mudar,
+    Toda vez que songs mudar,
 
-    salvamos automaticamente
+    salvamos automaticamente
 
-    no navegador.
+    no navegador.
 
-  */
+  */
 
 
 
-    useEffect(() => {
+    useEffect(() => {
 
-      saveSongs(songs);
+      saveSongs(songs);
 
-    }, [songs]);
+    }, [songs]);
 
 
 
-  const filteredSongs =
+  const filteredSongs =
 
-    songs.filter((song) => {
+    songs.filter((song) => {
 
-      const term =
+      const term =
 
-        search.toLowerCase();
+        search.toLowerCase();
 
 
 
-      return (
+      return (
 
-        song.title
+        song.title
 
-          .toLowerCase()
+          .toLowerCase()
 
-          .includes(term) ||
+          .includes(term) ||
 
-        song.artist
+        song.artist
 
-          .toLowerCase()
+          .toLowerCase()
 
-          .includes(term) ||
+          .includes(term) ||
 
-        song.key
+        song.key
 
-          .toLowerCase()
+          .toLowerCase()
 
-          .includes(term) ||
+          .includes(term) ||
 
-        song.tuning
+        song.tuning
 
-          .toLowerCase()
+          .toLowerCase()
 
-          .includes(term)
+          .includes(term)
 
-      );
+      );
 
-    });
+    });
 
 
 
-  function openNewSong() {
+  function openNewSong() {
 
-    setEditingId(null);
+    setEditingId(null);
 
 
 
-    setForm(emptyForm);
+    setForm(emptyForm);
 
 
 
-    setModalOpen(true);
+    setModalOpen(true);
 
-  }
+  }
 
 
 
-  function openEditSong(
+  function openEditSong(
 
-    song: Song
+    song: Song
 
-  ) {
+  ) {
 
-    setEditingId(song.id);
+    setEditingId(song.id);
 
 
 
-    setForm({
+    setForm({
 
-      title: song.title,
+      title: song.title,
 
-      artist: song.artist,
+      artist: song.artist,
 
-      bpm: String(song.bpm),
+      bpm: String(song.bpm),
 
-      key: song.key,
+      key: song.key,
 
-      tuning: song.tuning,
+      tuning: song.tuning,
 
-      duration: song.duration,
+      duration: song.duration,
 
-      status: song.status,
+      status: song.status,
 
-    });
+    });
 
 
 
-    setModalOpen(true);
+    setModalOpen(true);
 
-  }
+  }
 
 
 
-  function closeModal() {
+  function closeModal() {
 
-    setModalOpen(false);
+    setModalOpen(false);
 
 
 
-    setEditingId(null);
+    setEditingId(null);
 
 
 
-    setForm(emptyForm);
+    setForm(emptyForm);
 
-  }
+  }
 
 
 
-  async function handleSubmit(
+  async function handleSubmit(
 
-    event: FormEvent<HTMLFormElement>
+    event: FormEvent<HTMLFormElement>
 
-  ) {
+  ) {
 
-    event.preventDefault();
+    event.preventDefault();
 
 
 
-    console.log("SALVAR CLICADO", {
+    console.log("SALVAR CLICADO", {
 
-      editingId,
+      editingId,
 
-      status: form.status,
+      status: form.status,
 
-      title: form.title,
+      title: form.title,
 
-    });
+    });
 
 
 
-    if (
+    if (
 
-      !form.title.trim() ||
+      !form.title.trim() ||
 
-      !form.artist.trim() ||
+      !form.artist.trim() ||
 
-      !form.bpm ||
+      !form.bpm ||
 
-      !form.key.trim() ||
+      !form.key.trim() ||
 
-      !form.duration.trim()
+      !form.duration.trim()
 
-    ) {
+    ) {
 
-      return;
+      return;
 
-    }
+    }
 
 
 
-    const bpm = Number(form.bpm);
+    const bpm = Number(form.bpm);
 
 
 
-    if (
+    if (
 
-      !Number.isFinite(bpm) ||
+      !Number.isFinite(bpm) ||
 
-      bpm < 1 ||
+      bpm < 1 ||
 
-      bpm > 400
+      bpm > 400
 
-    ) {
+    ) {
 
-      return;
+      return;
 
-    }
+    }
 
 
 
-    try {
+    try {
 
-      const savedSong = await saveSongToApi(form, editingId);
+      const savedSong = await saveSongToApi(form, editingId);
 
-      const convertedSong = convertApiSong(savedSong);
+      const convertedSong = convertApiSong(savedSong);
 
 
 
-      setSongs((currentSongs) => {
+      setSongs((currentSongs) => {
 
-        if (editingId !== null) {
+        if (editingId !== null) {
 
-          return currentSongs.map((song) =>
+          return currentSongs.map((song) =>
 
-            song.id === editingId ? convertedSong : song
+            song.id === editingId ? convertedSong : song
 
-          );
+          );
 
-        }
+        }
 
 
 
-        return [...currentSongs, convertedSong];
+        return [...currentSongs, convertedSong];
 
-      });
+      });
 
 
 
-      closeModal();
+      closeModal();
 
-    } catch (error) {
+    } catch (error) {
 
-      console.error("Erro ao salvar música:", error);
+      console.error("Erro ao salvar música:", error);
 
 
 
-      alert(
+      alert(
 
-        error instanceof Error
+        error instanceof Error
 
-          ? error.message
+          ? error.message
 
-          : "Não foi possível salvar a música."
+          : "Não foi possível salvar a música."
 
-      );
+      );
 
-    }
+    }
 
-  }
+  }
 
 
 
-  async function confirmDelete() {
+  async function confirmDelete() {
 
-    if (deleteId === null) {
+    if (deleteId === null) {
 
-      return;
+      return;
 
-    }
+    }
 
 
 
-    try {
+    try {
 
-      await deleteSongFromApi(deleteId);
+      await deleteSongFromApi(deleteId);
 
 
 
-      setSongs((currentSongs) =>
+      setSongs((currentSongs) =>
 
-        currentSongs.filter((song) => song.id !== deleteId)
+        currentSongs.filter((song) => song.id !== deleteId)
 
-      );
+      );
 
 
 
-      setDeleteId(null);
+      setDeleteId(null);
 
-    } catch (error) {
+    } catch (error) {
 
-      console.error("Erro ao excluir música:", error);
+      console.error("Erro ao excluir música:", error);
 
 
 
-      alert(
+      alert(
 
-        error instanceof Error
+        error instanceof Error
 
-          ? error.message
+          ? error.message
 
-          : "Não foi possível excluir a música."
+          : "Não foi possível excluir a música."
 
-      );
+      );
 
-    }
+    }
 
-  }
+  }
 
 
 
-  return (
+  return (
 
-    <div>
+    <div>
 
 
 
 {apiLoading && (
 
-  <p role="status">
+  <p role="status">
 
-    Carregando repertório do servidor...
+    Carregando repertório do servidor...
 
-  </p>
+  </p>
 
 )}
 
@@ -615,1243 +615,1243 @@ useEffect(() => {
 
 {apiError && (
 
-  <p role="alert" style={{ color: "#ef4444" }}>
+  <p role="alert" style={{ color: "#ef4444" }}>
 
-    {apiError}
+    {apiError}
 
-  </p>
+  </p>
 
 )}
 
 
 
-      {/* HEADER */}
+      {/* HEADER */}
 
 
 
-      <header className="page-header">
+      <header className="page-header">
 
 
 
-        <div>
+        <div>
 
-          <span className="eyebrow">
+          <span className="eyebrow">
 
-            BIBLIOTECA
+            BIBLIOTECA
 
-          </span>
+          </span>
 
 
 
-          <h1>
+          <h1>
 
-            Repertório
+            Repertório
 
-          </h1>
+          </h1>
 
 
 
-          <p>
+          <p>
 
-            Gerencie todas as músicas
+            Gerencie todas as músicas
 
-            da banda.
+            da banda.
 
-          </p>
+          </p>
 
-        </div>
+        </div>
 
 
 
-        <button
+        <button
 
-          className="primary-button"
+          className="primary-button"
 
-          onClick={openNewSong}
+          onClick={openNewSong}
 
-        >
+        >
 
-          <Plus size={16} />
+          <Plus size={16} />
 
 
 
-          Nova Música
+          Nova Música
 
-        </button>
+        </button>
 
 
 
-      </header>
+      </header>
 
 
 
-      {/* BUSCA */}
+      {/* BUSCA */}
 
 
 
-      <div className="repertoire-toolbar">
+      <div className="repertoire-toolbar">
 
 
 
-        <div className="search-box">
+        <div className="search-box">
 
 
 
-          <Search size={17} />
+          <Search size={17} />
 
 
 
-          <input
+          <input
 
-            type="text"
+            type="text"
 
-            placeholder="Buscar música, artista, tom..."
+            placeholder="Buscar música, artista, tom..."
 
-            value={search}
+            value={search}
 
-            onChange={(event) =>
+            onChange={(event) =>
 
-              setSearch(
+              setSearch(
 
-                event.target.value
+                event.target.value
 
-              )
+              )
 
-            }
+            }
 
-          />
+          />
 
 
 
-        </div>
+        </div>
 
 
 
-        <div className="song-counter">
+        <div className="song-counter">
 
 
 
-          {filteredSongs.length}
+          {filteredSongs.length}
 
 
 
-          {filteredSongs.length === 1
+          {filteredSongs.length === 1
 
-            ? " música"
+            ? " música"
 
-            : " músicas"}
+            : " músicas"}
 
 
 
-        </div>
+        </div>
 
 
 
-      </div>
+      </div>
 
 
 
-      {/* TABELA */}
+      {/* TABELA */}
 
 
 
-      <div className="songs-table-container">
+      <div className="songs-table-container">
 
 
 
-        <table className="songs-table">
+        <table className="songs-table">
 
 
 
-          <thead>
+          <thead>
 
 
 
-            <tr>
+            <tr>
 
-              <th>MÚSICA</th>
+              <th>MÚSICA</th>
 
-              <th>BPM</th>
+              <th>BPM</th>
 
-              <th>TOM</th>
+              <th>TOM</th>
 
-              <th>AFINAÇÃO</th>
+              <th>AFINAÇÃO</th>
 
-              <th>DURAÇÃO</th>
+              <th>DURAÇÃO</th>
 
-              <th>STATUS</th>
+              <th>STATUS</th>
 
-              <th>AÇÕES</th>
+              <th>AÇÕES</th>
 
-            </tr>
+            </tr>
 
 
 
-          </thead>
+          </thead>
 
 
 
-          <tbody>
+          <tbody>
 
 
 
-            {filteredSongs.map(
+            {filteredSongs.map(
 
-              (song) => (
+              (song) => (
 
-                <tr key={song.id}>
+                <tr key={song.id}>
 
 
 
-                  <td>
+                  <td>
 
-                    <div className="song-name">
+                    <div className="song-name">
 
 
 
-                      <strong>
+                      <strong>
 
-                        {song.title}
+                        {song.title}
 
-                      </strong>
+                      </strong>
 
 
 
-                      <span>
+                      <span>
 
-                        {song.artist}
+                        {song.artist}
 
-                      </span>
+                      </span>
 
 
 
-                    </div>
+                    </div>
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
-                    <span className="bpm">
+                    <span className="bpm">
 
-                      {song.bpm}
+                      {song.bpm}
 
-                    </span>
+                    </span>
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
-                    {song.key}
+                    {song.key}
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
-                    {song.tuning}
+                    {song.tuning}
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
-                    {song.duration}
+                    {song.duration}
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
 
 
-                    <span
+                    <span
 
-                      className={`song-status ${
+                      className={`song-status ${
 
-                        song.status ===
+                        song.status ===
 
-                        "Pronta"
+                        "Pronta"
 
-                          ? "ready"
+                          ? "ready"
 
-                          : song.status ===
+                          : song.status ===
 
-                            "Ensaiando"
+                            "Ensaiando"
 
-                          ? "rehearsal"
+                          ? "rehearsal"
 
-                          : song.status ===
+                          : song.status ===
 
-                            "Nova"
+                            "Nova"
 
-                          ? "new"
+                          ? "new"
 
-                          : "paused"
+                          : "paused"
 
-                      }`}
+                      }`}
 
-                    >
+                    >
 
-                      {song.status}
+                      {song.status}
 
-                    </span>
+                    </span>
 
 
 
-                  </td>
+                  </td>
 
 
 
-                  <td>
+                  <td>
 
 
 
-                    <div className="song-actions">
+                    <div className="song-actions">
 
 
 
-                      <button
+                      <button
 
-                        className="icon-button"
+                        className="icon-button"
 
-                        title="Editar música"
+                        title="Editar música"
 
-                        onClick={() =>
+                        onClick={() =>
 
-                          openEditSong(
+                          openEditSong(
 
-                            song
+                            song
 
-                          )
+                          )
 
-                        }
+                        }
 
-                      >
+                      >
 
-                        <Edit3
+                        <Edit3
 
-                          size={15}
+                          size={15}
 
-                        />
+                        />
 
-                      </button>
+                      </button>
 
 
 
-                      <button
+                      <button
 
-                        className="icon-button danger"
+                        className="icon-button danger"
 
-                        title="Excluir música"
+                        title="Excluir música"
 
-                        onClick={() =>
+                        onClick={() =>
 
-                          setDeleteId(
+                          setDeleteId(
 
-                            song.id
+                            song.id
 
-                          )
+                          )
 
-                        }
+                        }
 
-                      >
+                      >
 
-                        <Trash2
+                        <Trash2
 
-                          size={15}
+                          size={15}
 
-                        />
+                        />
 
-                      </button>
+                      </button>
 
 
 
-                    </div>
+                    </div>
 
 
 
-                  </td>
+                  </td>
 
 
 
-                </tr>
+                </tr>
 
-              )
+              )
 
-            )}
+            )}
 
 
 
-          </tbody>
+          </tbody>
 
 
 
-        </table>
+        </table>
 
 
 
-        {filteredSongs.length ===
+        {filteredSongs.length ===
 
-          0 && (
+          0 && (
 
-          <div className="no-results">
+          <div className="no-results">
 
 
 
-            <Music2 size={30} />
+            <Music2 size={30} />
 
 
 
-            <strong>
+            <strong>
 
-              Nenhuma música
+              Nenhuma música
 
-              encontrada
+              encontrada
 
-            </strong>
+            </strong>
 
 
 
-            <span>
+            <span>
 
-              Tente buscar outro nome,
+              Tente buscar outro nome,
 
-              artista, tom ou afinação.
+              artista, tom ou afinação.
 
-            </span>
+            </span>
 
 
 
-          </div>
+          </div>
 
-        )}
+        )}
 
 
 
-      </div>
+      </div>
 
 
 
-      {/* MODAL CRIAR / EDITAR */}
+      {/* MODAL CRIAR / EDITAR */}
 
 
 
-      {modalOpen && (
+      {modalOpen && (
 
-        <div
+        <div
 
-          className="modal-overlay"
+          className="modal-overlay"
 
-          onMouseDown={
+          onMouseDown={
 
-            closeModal
+            closeModal
 
-          }
+          }
 
-        >
+        >
 
 
 
-          <div
+          <div
 
-            className="modal"
+            className="modal"
 
-            onMouseDown={(
+            onMouseDown={(
 
-              event
+              event
 
-            ) =>
+            ) =>
 
-              event.stopPropagation()
+              event.stopPropagation()
 
-            }
+            }
 
-          >
+          >
 
 
 
-            <div className="modal-header">
+            <div className="modal-header">
 
 
 
-              <div>
+              <div>
 
 
 
-                <span className="eyebrow">
+                <span className="eyebrow">
 
-                  REPERTÓRIO
+                  REPERTÓRIO
 
-                </span>
+                </span>
 
 
 
-                <h2>
+                <h2>
 
-                  {editingId !== null
+                  {editingId !== null
 
-                    ? "Editar Música"
+                    ? "Editar Música"
 
-                    : "Nova Música"}
+                    : "Nova Música"}
 
-                </h2>
+                </h2>
 
 
 
-                <p>
+                <p>
 
-                  {editingId !== null
+                  {editingId !== null
 
-                    ? "Atualize as informações da música."
+                    ? "Atualize as informações da música."
 
-                    : "Adicione uma música ao repertório."}
+                    : "Adicione uma música ao repertório."}
 
-                </p>
+                </p>
 
 
 
-              </div>
+              </div>
 
 
 
-              <button
+              <button
 
-                type="button"
+                type="button"
 
-                className="close-button"
+                className="close-button"
 
-                onClick={
+                onClick={
 
-                  closeModal
+                  closeModal
 
-                }
+                }
 
-              >
+              >
 
-                <X size={20} />
+                <X size={20} />
 
-              </button>
+              </button>
 
 
 
-            </div>
+            </div>
 
 
 
-            <form
+            <form
 
-              className="song-form"
+              className="song-form"
 
-              onSubmit={
+              onSubmit={
 
-                handleSubmit
+                handleSubmit
 
-              }
+              }
 
-            >
+            >
 
 
 
-              {/* NOME */}
+              {/* NOME */}
 
 
 
-              <div className="form-group full">
+              <div className="form-group full">
 
 
 
-                <label>
+                <label>
 
-                  Nome da música
+                  Nome da música
 
-                </label>
+                </label>
 
 
 
-                <input
+                <input
 
-                  type="text"
+                  type="text"
 
-                  placeholder="Ex: Faint"
+                  placeholder="Ex: Faint"
 
-                  value={
+                  value={
 
-                    form.title
+                    form.title
 
-                  }
+                  }
 
-                  onChange={(
+                  onChange={(
 
-                    event
+                    event
 
-                  ) =>
+                  ) =>
 
-                    setForm({
+                    setForm({
 
-                      ...form,
+                      ...form,
 
-                      title:
+                      title:
 
-                        event.target
+                        event.target
 
-                          .value,
+                          .value,
 
-                    })
+                    })
 
-                  }
+                  }
 
-                  required
+                  required
 
-                />
+                />
 
 
 
-              </div>
+              </div>
 
 
 
-              {/* ARTISTA */}
+              {/* ARTISTA */}
 
 
 
-              <div className="form-group full">
+              <div className="form-group full">
 
 
 
-                <label>
+                <label>
 
-                  Artista
+                  Artista
 
-                </label>
+                </label>
 
 
 
-                <input
+                <input
 
-                  type="text"
+                  type="text"
 
-                  placeholder="Ex: Linkin Park"
+                  placeholder="Ex: Linkin Park"
 
-                  value={
+                  value={
 
-                    form.artist
+                    form.artist
 
-                  }
+                  }
 
-                  onChange={(
+                  onChange={(
 
-                    event
+                    event
 
-                  ) =>
+                  ) =>
 
-                    setForm({
+                    setForm({
 
-                      ...form,
+                      ...form,
 
-                      artist:
+                      artist:
 
-                        event.target
+                        event.target
 
-                          .value,
+                          .value,
 
-                    })
+                    })
 
-                  }
+                  }
 
-                  required
+                  required
 
-                />
+                />
 
 
 
-              </div>
+              </div>
 
 
 
-              {/* BPM + TOM */}
+              {/* BPM + TOM */}
 
 
 
-              <div className="form-row">
+              <div className="form-row">
 
 
 
-                <div className="form-group">
+                <div className="form-group">
 
 
 
-                  <label>
+                  <label>
 
-                    BPM
+                    BPM
 
-                  </label>
+                  </label>
 
 
 
-                  <input
+                  <input
 
-                    type="number"
+                    type="number"
 
-                    min="1"
+                    min="1"
 
-                    max="400"
+                    max="400"
 
-                    placeholder="135"
+                    placeholder="135"
 
-                    value={
+                    value={
 
-                      form.bpm
+                      form.bpm
 
-                    }
+                    }
 
-                    onChange={(
+                    onChange={(
 
-                      event
+                      event
 
-                    ) =>
+                    ) =>
 
-                      setForm({
+                      setForm({
 
-                        ...form,
+                        ...form,
 
-                        bpm:
+                        bpm:
 
-                          event.target
+                          event.target
 
-                            .value,
+                            .value,
 
-                      })
+                      })
 
-                    }
+                    }
 
-                    required
+                    required
 
-                  />
+                  />
 
 
 
-                </div>
+                </div>
 
 
 
-                <div className="form-group">
+                <div className="form-group">
 
 
 
-                  <label>
+                  <label>
 
-                    Tom
+                    Tom
 
-                  </label>
+                  </label>
 
 
 
-                  <input
+                  <input
 
-                    type="text"
+                    type="text"
 
-                    placeholder="Ex: C#m"
+                    placeholder="Ex: C#m"
 
-                    value={
+                    value={
 
-                      form.key
+                      form.key
 
-                    }
+                    }
 
-                    onChange={(
+                    onChange={(
 
-                      event
+                      event
 
-                    ) =>
+                    ) =>
 
-                      setForm({
+                      setForm({
 
-                        ...form,
+                        ...form,
 
-                        key:
+                        key:
 
-                          event.target
+                          event.target
 
-                            .value,
+                            .value,
 
-                      })
+                      })
 
-                    }
+                    }
 
-                    required
+                    required
 
-                  />
+                  />
 
 
 
-                </div>
+                </div>
 
 
 
-              </div>
+              </div>
 
 
 
-              {/* AFINAÇÃO + DURAÇÃO */}
+              {/* AFINAÇÃO + DURAÇÃO */}
 
 
 
-              <div className="form-row">
+              <div className="form-row">
 
 
 
-                <div className="form-group">
+                <div className="form-group">
 
 
 
-                  <label>
+                  <label>
 
-                    Afinação
+                    Afinação
 
-                  </label>
+                  </label>
 
 
 
-                  <select
+                  <select
 
-                    value={
+                    value={
 
-                      form.tuning
+                      form.tuning
 
-                    }
+                    }
 
-                    onChange={(
+                    onChange={(
 
-                      event
+                      event
 
-                    ) =>
+                    ) =>
 
-                      setForm({
+                      setForm({
 
-                        ...form,
+                        ...form,
 
-                        tuning:
+                        tuning:
 
-                          event.target
+                          event.target
 
-                            .value,
+                            .value,
 
-                      })
+                      })
 
-                    }
+                    }
 
-                  >
+                  >
 
 
 
-                    <option>
+                    <option>
 
-                      Standard
+                      Standard
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Drop D
+                      Drop D
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Drop C#
+                      Drop C#
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Drop C
+                      Drop C
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Drop B
+                      Drop B
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Drop A
+                      Drop A
 
-                    </option>
+                    </option>
 
 
 
-                    <option>
+                    <option>
 
-                      Outra
+                      Outra
 
-                    </option>
+                    </option>
 
 
 
-                  </select>
+                  </select>
 
 
 
-                </div>
+                </div>
 
 
 
-                <div className="form-group">
+                <div className="form-group">
 
 
 
-                  <label>
+                  <label>
 
-                    Duração
+                    Duração
 
-                  </label>
+                  </label>
 
 
 
-                  <input
+                  <input
 
-                    type="text"
+                    type="text"
 
-                    placeholder="Ex: 3:45"
+                    placeholder="Ex: 3:45"
 
-                    value={
+                    value={
 
-                      form.duration
+                      form.duration
 
-                    }
+                    }
 
-                    onChange={(
+                    onChange={(
 
-                      event
+                      event
 
-                    ) =>
+                    ) =>
 
-                      setForm({
+                      setForm({
 
-                        ...form,
+                        ...form,
 
-                        duration:
+                        duration:
 
-                          event.target
+                          event.target
 
-                            .value,
+                            .value,
 
-                      })
+                      })
 
-                    }
+                    }
 
-                    required
+                    required
 
-                  />
+                  />
 
 
 
-                </div>
+                </div>
 
 
 
-              </div>
+              </div>
 
 
 
-              {/* STATUS */}
+              {/* STATUS */}
 
 
 
-              <div className="form-group full">
+              <div className="form-group full">
 
 
 
-                <label>
+                <label>
 
-                  Status
+                  Status
 
-                </label>
+                </label>
 
 
 
-                <select
+                <select
 
-                  value={
+                  value={
 
-                    form.status
+                    form.status
 
-                  }
+                  }
 
-                  onChange={(
+                  onChange={(
 
-                    event
+                    event
 
-                  ) =>
+                  ) =>
 
-                    setForm({
+                    setForm({
 
-                      ...form,
+                      ...form,
 
 
 
-                      status:
+                      status:
 
-                        event.target
+                        event.target
 
-                          .value as SongStatus,
+                          .value as SongStatus,
 
-                    })
+                    })
 
-                  }
+                  }
 
-                >
+                >
 
 
 
-                  <option value="Pronta">
+                  <option value="Pronta">
 
-                    Pronta
+                    Pronta
 
-                  </option>
+                  </option>
 
 
 
-                  <option value="Ensaiando">
+                  <option value="Ensaiando">
 
-                    Ensaiando
+                    Ensaiando
 
-                  </option>
+                  </option>
 
 
 
-                  <option value="Nova">
+                  <option value="Nova">
 
-                    Nova
+                    Nova
 
-                  </option>
+                  </option>
 
 
 
-                  <option value="Pausada">
+                  <option value="Pausada">
 
-                    Pausada
+                    Pausada
 
-                  </option>
+                  </option>
 
 
 
-                </select>
+                </select>
 
 
 
-              </div>
+              </div>
 
 
 
-              {/* BOTÕES */}
+              {/* BOTÕES */}
 
 
 
-              <div className="form-actions">
+              <div className="form-actions">
 
 
 
-                <button
+                <button
 
-                  type="button"
+                  type="button"
 
-                  className="secondary-button"
+                  className="secondary-button"
 
-                  onClick={
+                  onClick={
 
-                    closeModal
+                    closeModal
 
-                  }
+                  }
 
-                >
+                >
 
-                  Cancelar
+                  Cancelar
 
-                </button>
+                </button>
 
 
 
-                <button
+                <button
 
-                  type="submit"
+                  type="submit"
 
-                  className="primary-button"
+                  className="primary-button"
 
-                >
+                >
 
 
 
-                  {editingId !== null
+                  {editingId !== null
 
-                    ? "Salvar Alterações"
+                    ? "Salvar Alterações"
 
-                    : "Adicionar Música"}
+                    : "Adicionar Música"}
 
 
 
-                </button>
+                </button>
 
 
 
-              </div>
+              </div>
 
 
 
-            </form>
+            </form>
 
 
 
-          </div>
+          </div>
 
 
 
-        </div>
+        </div>
 
-      )}
+      )}
 
 
 
-      {/* CONFIRMAÇÃO EXCLUSÃO */}
+      {/* CONFIRMAÇÃO EXCLUSÃO */}
 
 
 
-      {deleteId !== null && (
+      {deleteId !== null && (
 
-        <div
+        <div
 
-          className="modal-overlay"
+          className="modal-overlay"
 
-          onMouseDown={() =>
+          onMouseDown={() =>
 
-            setDeleteId(null)
+            setDeleteId(null)
 
-          }
+          }
 
-        >
+        >
 
 
 
-          <div
+          <div
 
-            className="delete-modal"
+            className="delete-modal"
 
-            onMouseDown={(
+            onMouseDown={(
 
-              event
+              event
 
-            ) =>
+            ) =>
 
-              event.stopPropagation()
+              event.stopPropagation()
 
-            }
+            }
 
-          >
+          >
 
 
 
-            <div className="delete-icon">
+            <div className="delete-icon">
 
-              <Trash2 size={22} />
+              <Trash2 size={22} />
 
-            </div>
+            </div>
 
 
 
-            <h2>
+            <h2>
 
-              Excluir música?
+              Excluir música?
 
-            </h2>
+            </h2>
 
 
 
-            <p>
+            <p>
 
-              Essa ação removerá a música
+              Essa ação removerá a música
 
-              do repertório.
+              do repertório.
 
-            </p>
+            </p>
 
 
 
-            <div className="delete-actions">
+            <div className="delete-actions">
 
 
 
-              <button
+              <button
 
-                className="secondary-button"
+                className="secondary-button"
 
-                onClick={() =>
+                onClick={() =>
 
-                  setDeleteId(null)
+                  setDeleteId(null)
 
-                }
+                }
 
-              >
+              >
 
-                Cancelar
+                Cancelar
 
-              </button>
+              </button>
 
 
 
-              <button
+              <button
 
-                className="delete-button"
+                className="delete-button"
 
-                onClick={
+                onClick={
 
-                  confirmDelete
+                  confirmDelete
 
-                }
+                }
 
-              >
+              >
 
-                Excluir Música
+                Excluir Música
 
-              </button>
+              </button>
 
 
 
-            </div>
+            </div>
 
 
 
-          </div>
+          </div>
 
 
 
-        </div>
+        </div>
 
-      )}
+      )}
 
 
 
-    </div>
+    </div>
 
-  );
+  );
 
 }
 

@@ -104,12 +104,6 @@ async function createAccountToken(
   return raw;
 }
 
-function requestMeta(request: Request) {
-  return {
-    ip: request.ip,
-  };
-}
-
 router.get("/providers", (_request, response) => {
   response.json({
     ...providers,

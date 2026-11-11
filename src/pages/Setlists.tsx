@@ -269,6 +269,7 @@ function Setlists({
   const [setlistId, setSetlistId] = useState<number | null>(null);
   const [setlistLoading, setSetlistLoading] = useState(true);
   const [setlistError, setSetlistError] = useState("");
+  const [showLimit, setShowLimit] = useState(60);
     
     useEffect(() => {
       let active = true;
@@ -290,6 +291,7 @@ function Setlists({
 
           if (active) {
             setShows(showsData.map(convertShow));
+            setShowLimit(showsData.find((show) => show.id === showId)?.duration ?? 60);
             setSetlistId(selectedSetlist?.id ?? null);
             setSetlist(
               selectedSetlist
@@ -337,14 +339,6 @@ function Setlists({
             show.id === showId
         ) ?? null;
 
-  const [
-    showLimit,
-    setShowLimit,
-  ] = useState(
-    selectedShow?.duration ??
-      60
-  );
-
   /*
     IMPORTANTE:
 
@@ -363,22 +357,6 @@ function Setlists({
         setlist
       );
     }, [setlist, showId]);
-
-  /*
-    Se o show possuir duração
-    cadastrada, usamos como
-    limite automaticamente.
-  */
-
-  useEffect(() => {
-    setShowLimit(
-      selectedShow?.duration ??
-        60
-    );
-  }, [
-    showId,
-    selectedShow?.duration,
-  ]);
 
   /*
     Salva o setlist utilizando

@@ -269,6 +269,7 @@ function Setlists({
   const [setlistId, setSetlistId] = useState<number | null>(null);
   const [setlistLoading, setSetlistLoading] = useState(true);
   const [setlistError, setSetlistError] = useState("");
+  const [showLimit, setShowLimit] = useState(60);
     
     useEffect(() => {
       let active = true;
@@ -337,14 +338,6 @@ function Setlists({
           (show) =>
             show.id === showId
         ) ?? null;
-
-  const [
-    showLimit,
-    setShowLimit,
-  ] = useState(
-    selectedShow?.duration ??
-      60
-  );
 
   /*
     IMPORTANTE:

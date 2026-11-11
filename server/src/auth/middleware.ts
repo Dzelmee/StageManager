@@ -26,6 +26,8 @@ export type AuthContext = {
 };
 
 declare global {
+  // Express type augmentation requires the global namespace declaration.
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       auth?: AuthContext;

@@ -290,6 +290,7 @@ function Setlists({
 
           if (active) {
             setShows(showsData.map(convertShow));
+            setShowLimit(showsData.find((show) => show.id === showId)?.duration ?? 60);
             setSetlistId(selectedSetlist?.id ?? null);
             setSetlist(
               selectedSetlist
@@ -363,22 +364,6 @@ function Setlists({
         setlist
       );
     }, [setlist, showId]);
-
-  /*
-    Se o show possuir duração
-    cadastrada, usamos como
-    limite automaticamente.
-  */
-
-  useEffect(() => {
-    setShowLimit(
-      selectedShow?.duration ??
-        60
-    );
-  }, [
-    showId,
-    selectedShow?.duration,
-  ]);
 
   /*
     Salva o setlist utilizando

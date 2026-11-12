@@ -152,3 +152,23 @@ npm test
 ```
 
 Defina `TEST_DATABASE_URL` se quiser usar outro banco de teste.
+
+## Problemas comuns no ambiente local
+
+Alguns pontos que vale conferir quando o projeto não inicia corretamente:
+
+- **A interface abre, mas não carrega dados:** confirme que a API está rodando
+  na porta 3333 e que `VITE_API_URL` aponta para o endereço correto.
+  Abra `http://localhost:3333/api/health` para conferir a resposta da API.
+- **Erro de conexão com o banco:** verifique se o PostgreSQL está ativo e se
+  `DATABASE_URL` no `server/.env` corresponde ao banco local. Depois execute
+  `npx prisma migrate deploy` dentro de `server/`.
+- **Erro de tipos ou cliente Prisma após mudar o schema:** execute
+  `npx prisma generate` dentro de `server/` antes de tentar compilar novamente.
+- **Falha ao executar testes:** os testes usam um banco separado
+  (`stagemanager_test`). Confira as permissões do PostgreSQL e, se necessário,
+  configure `TEST_DATABASE_URL` para apontar para um banco exclusivo de testes.
+
+Antes de abrir um PR, costumo conferir pelo menos `npm run lint` e
+`npm run build` na raiz. Mudanças na API também precisam passar por
+`npm run build` dentro de `server/`.

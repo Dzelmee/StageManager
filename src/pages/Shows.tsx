@@ -483,6 +483,7 @@ function Shows({
 
 <button
   title="Editar show"
+  aria-label={`Editar show ${show.name}`}
   onClick={() => openEditShow(show)}
 >
   <Edit3 size={15} />
@@ -491,6 +492,7 @@ function Shows({
 <button
   className="danger"
   title="Excluir show"
+  aria-label={`Excluir show ${show.name}`}
   onClick={() => setDeleteId(show.id)}
 >
   <Trash2 size={15} />

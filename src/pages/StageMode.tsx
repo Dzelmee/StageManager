@@ -592,6 +592,7 @@ function StageMode() {
 
           <button
             title="Reiniciar setlist"
+            aria-label="Reiniciar setlist"
             onClick={
               restart
             }
@@ -603,6 +604,7 @@ function StageMode() {
 
           <button
             title="Tela cheia"
+            aria-label="Alternar tela cheia"
             onClick={
               enterFullscreen
             }

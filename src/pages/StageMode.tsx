@@ -319,15 +319,24 @@ function StageMode() {
         return;
       }
 
+      // Não intercepta setas usadas em campos editáveis.
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, [contenteditable='true']"))
+      ) {
+        return;
+      }
+
       if (event.key === "ArrowRight") {
+        event.preventDefault();
         setCurrentIndex((current) => Math.min(current + 1, songs.length - 1));
       }
 
-      if (
-        event.key ===
-        "ArrowLeft"
-      ) {
-        previous();
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setCurrentIndex((current) => Math.max(current - 1, 0));
       }
     }
 

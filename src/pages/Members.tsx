@@ -405,9 +405,10 @@ function Members() {
               <div className="form-row">
 
                 <div className="form-group">
-                  <label>Nome</label>
+                  <label htmlFor="member-name">Nome</label>
 
                   <input
+                    id="member-name"
                     type="text"
                     placeholder="Ex: Jonas"
                     value={form.name}
@@ -423,9 +424,10 @@ function Members() {
                 </div>
 
                 <div className="form-group">
-                  <label>Função</label>
+                  <label htmlFor="member-role">Função</label>
 
                   <input
+                    id="member-role"
                     type="text"
                     placeholder="Ex: Vocal"
                     value={form.role}
@@ -445,9 +447,10 @@ function Members() {
               <div className="form-row">
 
                 <div className="form-group">
-                  <label>E-mail</label>
+                  <label htmlFor="member-email">E-mail</label>
 
                   <input
+                    id="member-email"
                     type="email"
                     placeholder="email@banda.com"
                     value={form.email}
@@ -462,10 +465,11 @@ function Members() {
                 </div>
 
                 <div className="form-group">
-                  <label>Telefone</label>
+                  <label htmlFor="member-phone">Telefone</label>
 
                   <input
-                    type="text"
+                    id="member-phone"
+                    type="tel"
                     placeholder="(21) 99999-9999"
                     value={form.phone}
                     onChange={(event) =>
@@ -481,11 +485,10 @@ function Members() {
               </div>
 
               <div className="form-group">
-                <label>
-                  Equipamento principal
-                </label>
+                <label htmlFor="member-equipment">Equipamento principal</label>
 
                 <input
+                  id="member-equipment"
                   type="text"
                   placeholder="Ex: Shure SM58 + IEM"
                   value={form.equipment}
@@ -501,9 +504,10 @@ function Members() {
 
               <div className="form-group">
 
-                <label>Status</label>
+                <label htmlFor="member-status">Status</label>
 
                 <select
+                  id="member-status"
                   value={form.status}
                   onChange={(event) =>
                     setForm({
@@ -531,11 +535,10 @@ function Members() {
 
               <div className="form-group">
 
-                <label>
-                  Observações
-                </label>
+                <label htmlFor="member-notes">Observações</label>
 
                 <textarea
+                  id="member-notes"
                   className="form-textarea"
                   placeholder="Informações adicionais..."
                   value={form.notes}

@@ -1167,7 +1167,7 @@ useEffect(() => {
 
 
 
-                <label>
+                <label htmlFor="song-title">
 
                   Nome da música
 
@@ -1175,7 +1175,7 @@ useEffect(() => {
 
 
 
-                <input
+                <input id="song-title"
 
                   type="text"
 
@@ -1225,7 +1225,7 @@ useEffect(() => {
 
 
 
-                <label>
+                <label htmlFor="song-artist">
 
                   Artista
 
@@ -1233,7 +1233,7 @@ useEffect(() => {
 
 
 
-                <input
+                <input id="song-artist"
 
                   type="text"
 
@@ -1287,7 +1287,7 @@ useEffect(() => {
 
 
 
-                  <label>
+                  <label htmlFor="song-bpm">
 
                     BPM
 
@@ -1295,7 +1295,7 @@ useEffect(() => {
 
 
 
-                  <input
+                  <input id="song-bpm"
 
                     type="number"
 
@@ -1345,7 +1345,7 @@ useEffect(() => {
 
 
 
-                  <label>
+                  <label htmlFor="song-key">
 
                     Tom
 
@@ -1353,7 +1353,7 @@ useEffect(() => {
 
 
 
-                  <input
+                  <input id="song-key"
 
                     type="text"
 
@@ -1411,7 +1411,7 @@ useEffect(() => {
 
 
 
-                  <label>
+                  <label htmlFor="song-tuning">
 
                     Afinação
 
@@ -1419,7 +1419,7 @@ useEffect(() => {
 
 
 
-                  <select
+                  <select id="song-tuning"
 
                     value={
 
@@ -1519,7 +1519,7 @@ useEffect(() => {
 
 
 
-                  <label>
+                  <label htmlFor="song-duration">
 
                     Duração
 
@@ -1527,7 +1527,7 @@ useEffect(() => {
 
 
 
-                  <input
+                  <input id="song-duration"
 
                     type="text"
 
@@ -1581,7 +1581,7 @@ useEffect(() => {
 
 
 
-                <label>
+                <label htmlFor="song-status">
 
                   Status
 
@@ -1589,7 +1589,7 @@ useEffect(() => {
 
 
 
-                <select
+                <select id="song-status"
 
                   value={
 

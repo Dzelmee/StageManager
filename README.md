@@ -172,3 +172,27 @@ Alguns pontos que vale conferir quando o projeto não inicia corretamente:
 Antes de abrir um PR, costumo conferir pelo menos `npm run lint` e
 `npm run build` na raiz. Mudanças na API também precisam passar por
 `npm run build` dentro de `server/`.
+
+## Checklist antes de publicar mudanças
+
+Para evitar que uma alteração no frontend esconda algum problema na API, faço as
+verificações por partes:
+
+```bash
+# Na raiz: qualidade do código e build da interface
+npm run lint
+npm run build
+
+# No diretório server/: compilação da API
+cd server
+npm run build
+```
+
+Quando a mudança envolve rotas, autenticação ou banco, também executo `npm test`
+no diretório `server/`, com o PostgreSQL de testes configurado. Nunca aponte
+`TEST_DATABASE_URL` para um banco com dados que precisam ser preservados: os
+testes criam registros e fazem limpeza durante a execução.
+
+Depois de iniciar os dois serviços, vale conferir o endpoint `/api/health` e
+abrir a interface no navegador. Build aprovado não substitui a conferência dos
+fluxos que foram alterados.

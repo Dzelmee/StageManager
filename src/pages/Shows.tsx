@@ -658,6 +658,9 @@ function Shows({
 
           <div
             className="modal show-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="show-form-dialog-title"
             onMouseDown={(
               event
             ) =>
@@ -673,7 +676,7 @@ function Shows({
                   AGENDA
                 </span>
 
-                <h2>
+                <h2 id="show-form-dialog-title">
                   {editingId !== null
                     ? "Editar Show"
                     : "Novo Show"}
@@ -689,6 +692,7 @@ function Shows({
               <button
                 type="button"
                 className="close-button"
+                aria-label="Fechar formulário de show"
                 onClick={
                   closeModal
                 }
@@ -1045,6 +1049,9 @@ function Shows({
 
           <div
             className="delete-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="show-delete-dialog-title"
             onMouseDown={(
               event
             ) =>
@@ -1056,7 +1063,7 @@ function Shows({
               <Trash2 size={22} />
             </div>
 
-            <h2>
+            <h2 id="show-delete-dialog-title">
               Excluir show?
             </h2>
 

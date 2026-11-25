@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   FormEvent,
@@ -104,6 +104,8 @@ function Shows({
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -171,6 +173,10 @@ function Shows({
     setModalOpen(true);
   }
 
+  function dismissModal() {
+    if (!savingRef.current) closeModal();
+  }
+
   function closeModal() {
     setModalOpen(false);
 
@@ -183,6 +189,7 @@ function Shows({
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+    if (savingRef.current) return;
   
     if (
       !form.name.trim() ||
@@ -202,9 +209,49 @@ function Shows({
       return;
     }
   
-    if (editingId !== null) {
+    savingRef.current = true;
+    setSaving(true);
+
+    try {
+      if (editingId !== null) {
+        try {
+          const savedShow = await showsApi.update(editingId, {
+            name: form.name.trim(),
+            venue: form.venue.trim(),
+            city: form.city.trim(),
+            date: `${form.date}T12:00:00.000Z`,
+            showTime: form.showTime,
+            loadIn: form.loadIn,
+            soundcheck: form.soundcheck,
+            duration,
+            status: form.status,
+            notes: form.notes.trim(),
+          });
+
+          setShows((currentShows) =>
+            currentShows.map((show) =>
+              show.id === editingId ? convertApiShow(savedShow) : show
+            )
+          );
+
+          closeModal();
+
+          console.log("Show atualizado no PostgreSQL:", savedShow);
+        } catch (error) {
+          console.error("Erro ao editar show:", error);
+
+          alert(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível atualizar o show."
+          );
+        }
+
+        return;
+      }
+
       try {
-        const savedShow = await showsApi.update(editingId, {
+        const savedShow = await showsApi.create({
           name: form.name.trim(),
           venue: form.venue.trim(),
           city: form.city.trim(),
@@ -217,58 +264,26 @@ function Shows({
           notes: form.notes.trim(),
         });
 
-        setShows((currentShows) =>
-          currentShows.map((show) =>
-            show.id === editingId ? convertApiShow(savedShow) : show
-          )
-        );
+        setShows((currentShows) => [
+          ...currentShows,
+          convertApiShow(savedShow),
+        ]);
 
         closeModal();
 
-        console.log("Show atualizado no PostgreSQL:", savedShow);
+        console.log("Show salvo no PostgreSQL:", savedShow);
       } catch (error) {
-        console.error("Erro ao editar show:", error);
+        console.error("Erro ao criar show:", error);
 
         alert(
           error instanceof Error
             ? error.message
-            : "Não foi possível atualizar o show."
+            : "Não foi possível salvar o show."
         );
       }
-
-      return;
-    }
-
-    try {
-      const savedShow = await showsApi.create({
-        name: form.name.trim(),
-        venue: form.venue.trim(),
-        city: form.city.trim(),
-        date: `${form.date}T12:00:00.000Z`,
-        showTime: form.showTime,
-        loadIn: form.loadIn,
-        soundcheck: form.soundcheck,
-        duration,
-        status: form.status,
-        notes: form.notes.trim(),
-      });
-
-      setShows((currentShows) => [
-        ...currentShows,
-        convertApiShow(savedShow),
-      ]);
-
-      closeModal();
-
-      console.log("Show salvo no PostgreSQL:", savedShow);
-    } catch (error) {
-      console.error("Erro ao criar show:", error);
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível salvar o show."
-      );
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   }
 
@@ -652,7 +667,7 @@ function Shows({
         <div
           className="modal-overlay"
           onMouseDown={
-            closeModal
+            dismissModal
           }
         >
 
@@ -689,8 +704,9 @@ function Shows({
               <button
                 type="button"
                 className="close-button"
+                disabled={saving}
                 onClick={
-                  closeModal
+                  dismissModal
                 }
               >
                 <X size={20} />
@@ -1006,8 +1022,9 @@ function Shows({
                 <button
                   type="button"
                   className="secondary-button"
+                  disabled={saving}
                   onClick={
-                    closeModal
+                    dismissModal
                   }
                 >
                   Cancelar
@@ -1015,9 +1032,10 @@ function Shows({
 
                 <button
                   type="submit"
+                  disabled={saving}
                   className="primary-button"
                 >
-                  {editingId !== null
+                  {saving ? "Salvando..." : editingId !== null
                     ? "Salvar Alterações"
                     : "Criar Show"}
                 </button>

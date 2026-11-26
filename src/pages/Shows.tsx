@@ -728,6 +728,7 @@ function Shows({
                 </label>
 
                 <input
+                  disabled={saving}
                   type="text"
                   placeholder="Ex: Rock Festival"
                   value={
@@ -757,6 +758,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="text"
                     placeholder="Ex: Rock'n Beer"
                     value={
@@ -784,6 +786,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="text"
                     placeholder="Ex: Rio de Janeiro"
                     value={
@@ -815,6 +818,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="date"
                     value={
                       form.date
@@ -841,6 +845,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="time"
                     value={
                       form.showTime
@@ -871,6 +876,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="time"
                     value={
                       form.loadIn
@@ -896,6 +902,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="time"
                     value={
                       form.soundcheck
@@ -925,6 +932,7 @@ function Shows({
                   </label>
 
                   <input
+                    disabled={saving}
                     type="number"
                     min="1"
                     placeholder="60"
@@ -953,6 +961,7 @@ function Shows({
                   </label>
 
                   <select
+                    disabled={saving}
                     value={
                       form.status
                     }
@@ -998,6 +1007,7 @@ function Shows({
                 </label>
 
                 <textarea
+                  disabled={saving}
                   className="form-textarea"
                   placeholder="Informações de produção, contato, estacionamento..."
                   value={

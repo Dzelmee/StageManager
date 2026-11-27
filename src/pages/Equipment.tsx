@@ -467,11 +467,12 @@ function Equipment() {
 
                 <div className="form-group">
 
-                  <label>
+                  <label htmlFor="equipment-name">
                     Equipamento
                   </label>
 
                   <input
+                    id="equipment-name"
                     type="text"
                     placeholder="Ex: Shure SM58"
                     value={form.name}
@@ -489,11 +490,12 @@ function Equipment() {
 
                 <div className="form-group">
 
-                  <label>
+                  <label htmlFor="equipment-category">
                     Categoria
                   </label>
 
                   <input
+                    id="equipment-category"
                     type="text"
                     placeholder="Ex: Microfone"
                     value={form.category}
@@ -515,11 +517,12 @@ function Equipment() {
 
                 <div className="form-group">
 
-                  <label>
+                  <label htmlFor="equipment-quantity">
                     Quantidade
                   </label>
 
                   <input
+                    id="equipment-quantity"
                     type="number"
                     min="1"
                     value={form.quantity}
@@ -537,11 +540,12 @@ function Equipment() {
 
                 <div className="form-group">
 
-                  <label>
+                  <label htmlFor="equipment-responsible">
                     Responsável
                   </label>
 
                   <select
+                    id="equipment-responsible"
                     value={
                       form.responsibleId
                     }
@@ -578,9 +582,10 @@ function Equipment() {
 
               <div className="form-group">
 
-                <label>Status</label>
+                <label htmlFor="equipment-status">Status</label>
 
                 <select
+                  id="equipment-status"
                   value={form.status}
                   onChange={(event) =>
                     setForm({
@@ -608,11 +613,12 @@ function Equipment() {
 
               <div className="form-group">
 
-                <label>
+                <label htmlFor="equipment-notes">
                   Observações
                 </label>
 
                 <textarea
+                  id="equipment-notes"
                   className="form-textarea"
                   placeholder="Modelo, patrimônio, case, cabos necessários..."
                   value={form.notes}

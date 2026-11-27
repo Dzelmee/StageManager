@@ -403,7 +403,7 @@ function ShowChecklistContent({
 
         </div>
 
-        <div className="checklist-progress-track">
+        <div className="checklist-progress-track" role="progressbar" aria-label="Preparação do show" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
 
           <div
             className="checklist-progress-fill"
@@ -494,6 +494,7 @@ function ShowChecklistContent({
                       return (
                         <button
                           key={item.id}
+                          aria-pressed={checked}
                           className={`checklist-item ${
                             checked
                               ? "checked"
